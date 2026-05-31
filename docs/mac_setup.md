@@ -245,8 +245,12 @@ default because those folders may be shared with other local ML projects.
 
 ### Hotkey doesn't respond
 - Check Accessibility permission (step 4).
-- Run the daemon from Terminal (not from a GUI launcher) so permissions attach
-  to the right app.
+- If the log says `This process is not trusted`, macOS has not granted
+  Accessibility permission to the launcher process.
+- If you launched with `./run.sh`, enable your terminal app in Accessibility
+  (Terminal, iTerm, or VS Code), then restart `./run.sh`.
+- If you launched with `open ~/Applications/tigris-whisper.app`, enable
+  **tigris-whisper**, then restart the app.
 
 ### Text is copied but not pasted
 - If you launched with `open ~/Applications/tigris-whisper.app`, grant

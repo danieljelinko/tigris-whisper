@@ -12,6 +12,9 @@
 - If testing with `./run.sh`, grant Accessibility to the terminal app. Clipboard
   copy working but paste failing means the remaining failure is the synthetic
   Cmd+V path, not transcription.
+- If the Mac log says `This process is not trusted`, the current launcher still
+  lacks Accessibility permission and the global hotkey cannot work until restart
+  after granting it.
 
 ## Blocked
 - Manual permission/hotkey validation still requires the Mac UI session. SSH can
@@ -21,6 +24,7 @@
 | Date | Task | Verified by |
 |---|---|---|
 | 2026-05-31 | Phase 4.12: visible model download progress | Added `scripts/download_mlx_model.py`; `run.sh` MLX backend and `scripts/test_mac_setup.sh` pre-download the selected model in the foreground so Hugging Face/tqdm progress bars are visible |
+| 2026-05-31 | Mac Accessibility preflight | Daemon now checks `AXIsProcessTrusted()` at startup and logs/notifies clear instructions before pynput's lower-level "process is not trusted" warning; `run.sh` now prints the Mac hotkey as Ctrl+Option+Space |
 | 2026-05-31 | Phase 4.10–4.11: model selection + paste diagnostics | Bootstrap writes `tigris-whisper.env`; `run.sh`, smoke test, install, uninstall read it; Mac paste now restores the original frontmost app through System Events and logs/notifies on `osascript` errors; installer/docs say offered models are multilingual and link to OpenAI's language list |
 | 2026-05-30 | Phase 4.9: background app lifecycle controls | Added `scripts/control_mac_app.sh status|start|stop|restart|logs`; app wrapper tracks child daemon PID; install/bootstrap print control commands; `tests/test_install_uninstall.sh` → 29 passed |
 | 2026-05-30 | Phase 4.8: startup Microphone permission request | Mac daemon now opens a short input stream at startup to trigger/list `tigris-whisper` in Microphone settings; Python compile and test suite green |

@@ -191,6 +191,10 @@ logs/state paths, docs, and install/uninstall tests were updated together.
 - The daemon uses `pbcopy` + AppleScript paste on macOS to avoid `pyautogui`
 - Microphone and Accessibility permission must be granted to **tigris-whisper**
   when launched as the app, or to the terminal app when launched manually
+- `This process is not trusted! Input event monitoring will not be possible`
+  means Accessibility is missing for the current launcher identity. For
+  `./run.sh`, grant the terminal app; for `open ...tigris-whisper.app`, grant
+  `tigris-whisper`; restart after granting.
 - If copied text does not paste, the likely cause is missing Accessibility for
   the actual launcher identity; the daemon now logs the target app and the
   `osascript` paste error.

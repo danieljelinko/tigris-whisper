@@ -10,7 +10,7 @@ Prereqs (Python ≥ 3.10):
     # sounddevice wheels already bundle PortAudio on macOS; no Homebrew needed.
 """
 
-import os, pathlib, logging, time, tempfile, queue, wave, subprocess
+import ctypes, os, pathlib, logging, time, tempfile, queue, wave, subprocess
 import requests, numpy as np, sounddevice as sd
 from pynput.keyboard import Key, Listener
 
@@ -91,6 +91,35 @@ def preflight_microphone():
             "Open Privacy & Security → Microphone and enable tigris-whisper.",
         )
 
+def accessibility_trusted() -> bool | None:
+    """Return whether this process is trusted for macOS Accessibility events."""
+    try:
+        app_services = ctypes.cdll.LoadLibrary(
+            "/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices"
+        )
+        app_services.AXIsProcessTrusted.restype = ctypes.c_bool
+        return bool(app_services.AXIsProcessTrusted())
+    except Exception as e:
+        log.debug("Accessibility trust check failed: %s", e)
+        return None
+
+def preflight_accessibility():
+    trusted = accessibility_trusted()
+    if trusted is True:
+        log.info("Accessibility preflight OK")
+        return
+    if trusted is None:
+        log.warning("Could not verify Accessibility permission before starting hotkey listener.")
+        return
+
+    msg = (
+        "Accessibility permission missing. Global hotkey monitoring and automatic paste will not work. "
+        "If running ./run.sh, enable your terminal app in System Settings → Privacy & Security → "
+        "Accessibility. If launching the app, enable tigris-whisper. Restart after granting permission."
+    )
+    log.warning(msg)
+    notify("Accessibility permission needed", "Enable your terminal app or tigris-whisper, then restart.")
+
 def start_recording():
     global stream, target_app
     if stream is not None:
@@ -156,6 +185,7 @@ def on_release(key):
 log.info("Whisper hot-key daemon (macOS) ready. "
          "Hold Ctrl+Option+Space to record; release Ctrl to stop.  API=%s", API)
 preflight_microphone()
+preflight_accessibility()
 
 try:
     with Listener(on_press=on_press, on_release=on_release) as listener:

@@ -6,7 +6,7 @@ set -euo pipefail
 # backend, then launches the OS-appropriate daemon.
 #
 # Dispatch:
-#   Darwin              → whisper.cpp + Metal
+#   Darwin              → mlx-whisper
 #   Linux + NVIDIA GPU  → Docker + CUDA   (existing proven path)
 #   Linux, no GPU       → whisper.cpp CPU
 #
@@ -110,7 +110,12 @@ esac
 
 echo ""
 echo "Backend ready. Starting tigris-whisper Daemon…"
-echo "Hold Ctrl+Alt+Space to record; release Ctrl to transcribe and paste."
+if [ "$OS" = "Darwin" ]; then
+    echo "Hold Ctrl+Option+Space to record; release Ctrl to transcribe and paste."
+    echo "If the hotkey does not respond, enable Accessibility for your terminal app."
+else
+    echo "Hold Ctrl+Alt+Space to record; release Ctrl to transcribe and paste."
+fi
 echo ""
 
 case "$OS" in
