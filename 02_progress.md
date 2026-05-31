@@ -20,6 +20,7 @@
 ## Done
 | Date | Task | Verified by |
 |---|---|---|
+| 2026-05-31 | Phase 4.12: visible model download progress | Added `scripts/download_mlx_model.py`; `run.sh` MLX backend and `scripts/test_mac_setup.sh` pre-download the selected model in the foreground so Hugging Face/tqdm progress bars are visible |
 | 2026-05-31 | Phase 4.10–4.11: model selection + paste diagnostics | Bootstrap writes `tigris-whisper.env`; `run.sh`, smoke test, install, uninstall read it; Mac paste now restores the original frontmost app through System Events and logs/notifies on `osascript` errors; installer/docs say offered models are multilingual and link to OpenAI's language list |
 | 2026-05-30 | Phase 4.9: background app lifecycle controls | Added `scripts/control_mac_app.sh status|start|stop|restart|logs`; app wrapper tracks child daemon PID; install/bootstrap print control commands; `tests/test_install_uninstall.sh` → 29 passed |
 | 2026-05-30 | Phase 4.8: startup Microphone permission request | Mac daemon now opens a short input stream at startup to trigger/list `tigris-whisper` in Microphone settings; Python compile and test suite green |

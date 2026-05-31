@@ -178,7 +178,7 @@ if [ "$OS" = "Darwin" ] && [ "${TIGRIS_SKIP_SMOKE_TEST:-0}" != "1" ]; then
     echo "This starts the local mlx-whisper server and transcribes a sample audio file."
     echo "Selected model: ${WHISPER_MLX_MODEL:-mlx-community/whisper-large-v3-turbo-q4}"
     echo "If this is the first run, the selected Whisper model downloads now."
-    echo "That can take several minutes; progress lines will print while it works."
+    echo "That can take several minutes; Hugging Face progress bars will print while it works."
     echo ""
     bash ./scripts/test_mac_setup.sh
 elif [ "$OS" = "Darwin" ]; then

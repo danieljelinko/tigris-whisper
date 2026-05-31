@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Sourceable: ensure_mlx_backend
 # Launches the mlx-whisper HTTP wrapper on :4444 (Apple Silicon only).
-# The model is downloaded lazily from HuggingFace on first transcription, so
-# there is no separate model-download step here. Idempotent: reuse if already up.
+# The model is pre-downloaded before the server starts so foreground terminal
+# runs can show Hugging Face/tqdm progress instead of appearing stuck.
 
 MLX_PORT="${WHISPER_MLX_PORT:-4444}"
 MLX_HOST="${WHISPER_MLX_HOST:-127.0.0.1}"
@@ -16,8 +16,14 @@ ensure_mlx_backend() {
     fi
 
     mkdir -p "$MLX_DIR"
-    echo "Starting mlx-whisper server (model: ${WHISPER_MLX_MODEL:-mlx-community/whisper-large-v3-turbo-q4})…"
-    echo "  (first run downloads the model from HuggingFace — may take a few minutes)"
+    echo "Checking MLX Whisper model cache…"
+    echo "  Model: ${WHISPER_MLX_MODEL:-mlx-community/whisper-large-v3-turbo-q4}"
+    echo "  First run downloads from Hugging Face and can take several minutes."
+    echo "  Progress bars appear below when files are downloading."
+    HF_HUB_DISABLE_XET="${HF_HUB_DISABLE_XET:-1}" WHISPER_MLX_MODEL="${WHISPER_MLX_MODEL:-mlx-community/whisper-large-v3-turbo-q4}" \
+        "$PIXI" run python "$SCRIPT_DIR/scripts/download_mlx_model.py" "${WHISPER_MLX_MODEL:-mlx-community/whisper-large-v3-turbo-q4}"
+
+    echo "Starting mlx-whisper server…"
     HF_HUB_DISABLE_XET="${HF_HUB_DISABLE_XET:-1}" WHISPER_MLX_HOST="$MLX_HOST" WHISPER_MLX_PORT="$MLX_PORT" \
         "$PIXI" run python "$SCRIPT_DIR/src/mlx_whisper_server.py" >"$MLX_DIR/mlx_server.log" 2>&1 &
     MLX_PID=$!

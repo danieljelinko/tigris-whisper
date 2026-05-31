@@ -21,7 +21,8 @@ Xcode CLT, Homebrew, or git. Re-running is safe.
 
 macOS only: bootstrap asks which local Whisper model to use, then the first
 smoke test/transcription downloads that model, which can take several minutes.
-After install, launch
+The setup test pre-downloads the model in the foreground so Hugging Face
+progress bars are visible. After install, launch
 `~/Applications/tigris-whisper.app` and grant **Microphone** and
 **Accessibility** permissions to **tigris-whisper** in System Settings →
 Privacy & Security.
@@ -94,6 +95,9 @@ Override for one run:
 ```bash
 WHISPER_MLX_MODEL=mlx-community/whisper-small-mlx-q4 ./run.sh
 ```
+
+When `./run.sh` needs to download a model, it runs the same foreground
+pre-download helper first so Terminal users can see Hugging Face progress bars.
 
 **Linux no-GPU setup:**
 ```bash

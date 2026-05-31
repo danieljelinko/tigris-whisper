@@ -40,6 +40,8 @@ install/uninstall tests until the next clean Mac run:
   setup and warm the model cache
 - bootstrap chooses/saves the MLX model before install; `run.sh`, app launch,
   smoke test, and uninstall all read `tigris-whisper.env`
+- model warmup now pre-downloads the selected Hugging Face model in the
+  foreground so progress bars are visible before the server starts
 - the app launcher starts the daemon and writes logs to
   `~/Library/Logs/tigris-whisper/daemon.log` (same wrapper behavior was
   SSH-verified before rename; renamed paths are covered by tests)
@@ -103,8 +105,8 @@ cd ~/Developer/tigris-whisper
 ./scripts/test_mac_setup.sh
 ```
 
-This starts the mlx-whisper server, **downloads the selected Whisper model on
-first run** — this can take several minutes), POSTs a real WAV, and asserts you get text back.
+This pre-downloads the selected Whisper model with Hugging Face progress bars,
+starts the mlx-whisper server, POSTs a real WAV, and asserts you get text back.
 Checks all pass? The backend works.
 
 ### Step 4 — Manual hotkey test
@@ -184,7 +186,7 @@ logs/state paths, docs, and install/uninstall tests were updated together.
 ## Known constraints (from 04_learnings.md)
 
 - `mlx_whisper` only imports on Apple Silicon — the contract test mocks the boundary
-- First transcription downloads the selected model lazily and can take minutes; pre-warm with `test_mac_setup.sh`
+- First run downloads the selected model and can take minutes; pre-warm with `test_mac_setup.sh` to see foreground progress bars
 - macOS `/usr/bin/git` is a stub — **do not call git without checking the path**
 - The daemon uses `pbcopy` + AppleScript paste on macOS to avoid `pyautogui`
 - Microphone and Accessibility permission must be granted to **tigris-whisper**

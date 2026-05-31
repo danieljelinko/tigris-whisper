@@ -74,7 +74,7 @@ if [ "$OS" = "Darwin" ]; then
     echo "  Language scope: multilingual Whisper model."
     echo "  Language list: https://github.com/openai/whisper/blob/main/whisper/tokenizer.py"
     echo "  Model warmup: bootstrap runs ./scripts/test_mac_setup.sh next."
-    echo "  First warmup downloads the selected model and can take several minutes."
+    echo "  First warmup downloads the selected model with Hugging Face progress bars."
     echo "  Tip: to use whisper.cpp instead, run scripts/101_install_whispercpp.sh and"
     echo "       launch with WHISPER_BACKEND=whispercpp_metal ./run.sh"
     echo ""

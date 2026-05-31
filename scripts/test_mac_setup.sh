@@ -7,10 +7,10 @@
 #   1. Apple Silicon chip (M-series) + macOS version
 #   2. Pixi installed and Python deps synced
 #   3. Flask + daemon dependency imports
-#   4. End-to-end: start the mlx server, POST a real WAV → text
-#      (downloads the model from HuggingFace on first run — can take minutes)
-#   5. run.sh dispatch resolves to mlx
-#   6. macOS permission reminder (advisory)
+#   4. Model warmup/download with Hugging Face progress
+#   5. End-to-end: start the mlx server, POST a real WAV → text
+#   6. run.sh dispatch resolves to mlx
+#   7. macOS permission reminder (advisory)
 #
 # Usage:
 #   ./scripts/test_mac_setup.sh
@@ -84,10 +84,21 @@ hr; echo "3. Key imports"
     ok "daemon deps import (pynput, requests, sounddevice)" || \
     fail "a daemon dependency failed to import"
 
-# ─── 4. End-to-end: launch mlx server → transcribe fixture ───────────────────
-hr; echo "4. End-to-end transcription (mlx server + real audio)"
-echo "   NOTE: first run downloads the selected Whisper model."
-echo "   This can take several minutes. Progress lines below mean it is still working."
+# ─── 4. Model warmup/download ────────────────────────────────────────────────
+hr; echo "4. Model download / cache warmup"
+echo "   Selected model: $WHISPER_MLX_MODEL"
+echo "   First run downloads from Hugging Face and can take several minutes."
+echo "   Progress bars appear below when files are downloading."
+if HF_HUB_DISABLE_XET="${HF_HUB_DISABLE_XET:-1}" WHISPER_MLX_MODEL="$WHISPER_MLX_MODEL" \
+    "$PIXI" run python scripts/download_mlx_model.py "$WHISPER_MLX_MODEL"; then
+    ok "Model cache ready"
+else
+    fail "Model download/cache warmup failed"
+fi
+
+# ─── 5. End-to-end: launch mlx server → transcribe fixture ───────────────────
+hr; echo "5. End-to-end transcription (mlx server + real audio)"
+echo "   Model is already cached; this step verifies real transcription."
 SERVER_PID=""
 cleanup() { [ -n "$SERVER_PID" ] && kill "$SERVER_PID" 2>/dev/null || true; }
 trap cleanup EXIT
@@ -116,7 +127,6 @@ else
         CURL_LOG="$(mktemp)"
         echo "   Sending sample audio for transcription..."
         echo "   Progress: waiting for first response."
-        echo "   If the model is not cached yet, it is downloading now and can take several minutes."
         START_TS="$(date +%s)"
         curl -sf -F "file=@$FIXTURE;type=audio/wav" \
             "http://127.0.0.1:$PORT/v1/audio/transcriptions" \
@@ -154,13 +164,13 @@ else
 fi
 
 # ─── 5. Dispatch ──────────────────────────────────────────────────────────────
-hr; echo "5. run.sh dispatch"
+hr; echo "6. run.sh dispatch"
 BACKEND="$(bash run.sh --print-backend 2>/dev/null || echo error)"
 [ "$BACKEND" = "mlx" ] && ok "run.sh --print-backend → mlx" || \
     fail "run.sh --print-backend → '$BACKEND' (expected mlx)"
 
 # ─── 6. Permissions (advisory) ────────────────────────────────────────────────
-hr; echo "6. macOS permissions (verify manually — cannot be tested automatically)"
+hr; echo "7. macOS permissions (verify manually — cannot be tested automatically)"
 echo ""
 echo "  Grant both before running the daemon, or recording/paste fail silently."
 echo "  If launching the app wrapper, enable tigris-whisper:"

@@ -34,7 +34,7 @@ That's it. The bootstrap script handles everything in order:
 | Python deps | `pixi install` creates a Python 3.12 env and installs prebuilt wheels, **including mlx-whisper**, plus `ffmpeg` for audio loading |
 | App wrapper | Creates `~/Applications/tigris-whisper.app` so users can launch a named app instead of Terminal |
 | Model choice | Asks which local MLX Whisper model to use and saves it to `tigris-whisper.env` |
-| Model warmup | Runs `./scripts/test_mac_setup.sh`, which starts mlx-whisper and downloads the model on first use |
+| Model warmup | Runs `./scripts/test_mac_setup.sh`, which pre-downloads the model with Hugging Face progress bars, then starts mlx-whisper |
 
 > `~/Developer` is Apple's recognised folder for development projects (Finder shows it with a hammer icon). To install elsewhere without being prompted:
 > ```bash
@@ -47,8 +47,8 @@ touching macOS developer-tool stubs such as `python3` or `install_name_tool`.
 The only large download is the **selected Whisper model, fetched automatically
 from HuggingFace during the bootstrap smoke test or the first time you
 transcribe**. Size depends on the model you choose. This can take several
-minutes; the test prints progress while it works. After the model is cached,
-later runs are much faster.
+minutes; the test shows Hugging Face progress bars while files download. After
+the model is cached, later runs are much faster.
 
 If the install directory already exists from an older tarball install, bootstrap
 moves it aside to `tigris-whisper.backup.<timestamp>` before extracting.
@@ -168,7 +168,8 @@ Bootstrap runs this automatically on macOS unless you set
 |---|---|
 | Hardware | Apple Silicon chip detected |
 | Python | `pixi install` succeeds; Flask and daemon dependencies import |
-| **End-to-end** | Starts the mlx server, POSTs a real WAV, asserts text comes back (downloads the model on first run) |
+| **Model warmup** | Pre-downloads the selected model with Hugging Face progress bars |
+| **End-to-end** | Starts the mlx server, POSTs a real WAV, asserts text comes back |
 | Dispatch | `run.sh --print-backend` returns `mlx` |
 | Permissions | Prints reminder (cannot test programmatically) |
 
@@ -264,9 +265,10 @@ default because those folders may be shared with other local ML projects.
   (should return a 400 or 422, not "connection refused").
 
 ### First transcription hangs for a long time
-That's the one-time selected model download from HuggingFace. Watch progress in
-the server log: `tail -f ~/.cache/whisper.cpp/mlx_server.log`. Once cached, later
-runs are instant. To pre-download, just run `./scripts/test_mac_setup.sh` once.
+That's the one-time selected model download from Hugging Face. Current setup
+pre-downloads the model before the server starts, so you should see progress
+bars directly in Terminal during `bootstrap.sh`, `./scripts/test_mac_setup.sh`,
+or manual `./run.sh`. Once cached, later runs are much faster.
 
 ### Transcription is slow even after the model is cached
 - Confirm you're on Apple Silicon (`uname -m` → `arm64`). mlx only accelerates there.
@@ -320,7 +322,8 @@ code, read:
 `tests/` is verified. Phase 2 is Mac-only work:
 
 1. **Verify the mlx backend** — run `./scripts/test_mac_setup.sh`. The
-   end-to-end check starts `src/mlx_whisper_server.py`, downloads the selected model, and
+   model warmup downloads the selected model with visible progress; the
+   end-to-end check starts `src/mlx_whisper_server.py` and
    transcribes a real WAV. If it's green, the backend works.
 2. **Polish `src/whisper_hotkey_mac_experimental.py`** — the hotkey + recording
    + paste logic. Test the golden path manually: hold Ctrl+Option+Space in a

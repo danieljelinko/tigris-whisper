@@ -59,4 +59,5 @@ client change. All GPU options below are **Linux+NVIDIA only** — none help the
 - [x] 4.9 Add status/stop/restart/log controls for the background Mac app
 - [x] 4.10 Add bootstrap-time MLX model selection and persist it for app/run/test/uninstall
 - [x] 4.11 Improve Mac paste focus handling and paste-failure diagnostics
-- [ ] 4.12 Future polish: menu bar controller, launch-at-login toggle, icon, signing/notarization/DMG
+- [x] 4.12 Pre-download selected MLX model with visible Hugging Face progress bars
+- [ ] 4.13 Future polish: menu bar controller, launch-at-login toggle, icon, signing/notarization/DMG

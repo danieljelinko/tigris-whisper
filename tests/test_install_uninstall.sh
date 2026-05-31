@@ -98,6 +98,10 @@ grep -q "openai/whisper/blob/main/whisper/tokenizer.py" "$install_out" && \
     ok "install.sh prints language list link" || \
     fail "install.sh prints language list link"
 
+grep -q "Hugging Face progress bars" "$install_out" && \
+    ok "install.sh mentions visible model download progress" || \
+    fail "install.sh mentions visible model download progress"
+
 grep -q "control_mac_app.sh status|stop|restart|logs" "$install_out" && \
     ok "install.sh prints app control commands" || \
     fail "install.sh prints app control commands"
@@ -157,6 +161,10 @@ grep -q "WHISPER_MLX_MODEL=mlx-community/whisper-large-v3-turbo-q4" "$BOOTSTRAP_
 grep -q "can take several minutes" "$bootstrap_out" && \
     ok "bootstrap.sh warns model download can take several minutes" || \
     fail "bootstrap.sh warns model download can take several minutes"
+
+grep -q "Hugging Face progress bars" "$bootstrap_out" && \
+    ok "bootstrap.sh says model download has visible progress bars" || \
+    fail "bootstrap.sh says model download has visible progress bars"
 
 [ -f "$HOME/bootstrap-smoke-test-ran" ] && \
     ok "bootstrap.sh runs smoke test automatically on macOS" || \
