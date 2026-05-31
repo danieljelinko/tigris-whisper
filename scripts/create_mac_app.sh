@@ -15,10 +15,22 @@ CONTENTS="$APP_DIR/Contents"
 MACOS="$CONTENTS/MacOS"
 RESOURCES="$CONTENTS/Resources"
 EXECUTABLE="tigris-whisper"
+HELPER="launcher.sh"
 BUNDLE_ID="${WHISPER_APP_BUNDLE_ID:-com.danieljelinko.tigris-whisper}"
 
+rm -rf "$APP_DIR"
 mkdir -p "$MACOS" "$RESOURCES"
 printf "%s\n" "$REPO_DIR" > "$RESOURCES/repo_path"
+
+if command -v osacompile >/dev/null 2>&1; then
+    # Build a proper AppleScript applet so LaunchServices has a native app
+    # executable instead of trying to launch a shell script as CFBundleExecutable.
+    osacompile -o "$APP_DIR" -e \
+        'do shell script "nohup " & quoted form of (POSIX path of (path to me) & "Contents/Resources/launcher.sh") & " >/dev/null 2>&1 &"'
+    mkdir -p "$MACOS" "$RESOURCES"
+    [ -x "$MACOS/applet" ] && mv "$MACOS/applet" "$MACOS/$EXECUTABLE"
+    printf "%s\n" "$REPO_DIR" > "$RESOURCES/repo_path"
+fi
 
 cat > "$CONTENTS/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -52,7 +64,17 @@ cat > "$CONTENTS/Info.plist" <<PLIST
 </plist>
 PLIST
 
-cat > "$MACOS/$EXECUTABLE" <<'LAUNCHER'
+if [ ! -x "$MACOS/$EXECUTABLE" ]; then
+    # Fallback for unusual Macs without osacompile. Most installs use the native
+    # AppleScript applet above.
+    cat > "$MACOS/$EXECUTABLE" <<'FALLBACK'
+#!/usr/bin/env bash
+exec "$(dirname "$0")/../Resources/launcher.sh"
+FALLBACK
+    chmod +x "$MACOS/$EXECUTABLE"
+fi
+
+cat > "$RESOURCES/$HELPER" <<'LAUNCHER'
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -117,7 +139,7 @@ fi
 exit "$STATUS"
 LAUNCHER
 
-chmod +x "$MACOS/$EXECUTABLE"
+chmod +x "$RESOURCES/$HELPER"
 
 echo "✓ Created $APP_DIR"
 echo "  Logs: $HOME/Library/Logs/tigris-whisper/daemon.log"

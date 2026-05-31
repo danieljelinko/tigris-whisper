@@ -70,13 +70,17 @@ grep -q "com.danieljelinko.tigris-whisper" "$APP_DIR/Contents/Info.plist" && \
     ok "app wrapper plist contains bundle id" || \
     fail "app wrapper plist contains bundle id"
 
-grep -q "Starting in the background" "$APP_DIR/Contents/MacOS/tigris-whisper" && \
+grep -q "Starting in the background" "$APP_DIR/Contents/Resources/launcher.sh" && \
     ok "app wrapper notifies on background start" || \
     fail "app wrapper notifies on background start"
 
-grep -q "RUN_PID_FILE" "$APP_DIR/Contents/MacOS/tigris-whisper" && \
+grep -q "RUN_PID_FILE" "$APP_DIR/Contents/Resources/launcher.sh" && \
     ok "app wrapper tracks daemon child process" || \
     fail "app wrapper tracks daemon child process"
+
+grep -q "launcher.sh" "$APP_DIR/Contents/MacOS/tigris-whisper" && \
+    ok "app wrapper executable delegates to launcher helper" || \
+    fail "app wrapper executable delegates to launcher helper"
 
 grep -q "Uninstall:     ./uninstall.sh" "$install_out" && \
     ok "install.sh prints uninstall command" || \
