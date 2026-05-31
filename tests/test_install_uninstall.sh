@@ -48,6 +48,7 @@ chmod +x "$FAKE_BIN/git"
 export PATH="$FAKE_BIN:$PATH"
 export HOME="$HOME_DIR"
 export WHISPER_APP_PARENT="$APP_PARENT"
+unset TIGRIS_NO_LOG
 
 echo "=== install/uninstall tests ==="
 
@@ -85,6 +86,18 @@ grep -q "launcher.sh" "$APP_DIR/Contents/MacOS/tigris-whisper" && \
 grep -q "Uninstall:     ./uninstall.sh" "$install_out" && \
     ok "install.sh prints uninstall command" || \
     fail "install.sh prints uninstall command"
+
+grep -q "Logging installer output to:" "$install_out" && \
+    ok "install.sh announces installer log file" || \
+    fail "install.sh announces installer log file"
+
+[ -L "$HOME/Library/Logs/tigris-whisper/install-latest.log" ] && \
+    ok "install.sh writes latest installer log symlink" || \
+    fail "install.sh writes latest installer log symlink"
+
+grep -q "=== tigris-whisper installer ===" "$HOME/Library/Logs/tigris-whisper/install-latest.log" && \
+    ok "install.sh log captures installer output" || \
+    fail "install.sh log captures installer output"
 
 grep -q "Normal launch:     open ~/Applications/tigris-whisper.app" "$install_out" && \
     ok "install.sh makes app launch the normal path" || \
@@ -157,6 +170,18 @@ fi
 grep -q "Running Mac setup test and model warmup" "$bootstrap_out" && \
     ok "bootstrap.sh announces automatic smoke test/model warmup" || \
     fail "bootstrap.sh announces automatic smoke test/model warmup"
+
+grep -q "Logging bootstrap output to:" "$bootstrap_out" && \
+    ok "bootstrap.sh announces bootstrap log file" || \
+    fail "bootstrap.sh announces bootstrap log file"
+
+[ -L "$HOME/Library/Logs/tigris-whisper/bootstrap-latest.log" ] && \
+    ok "bootstrap.sh writes latest bootstrap log symlink" || \
+    fail "bootstrap.sh writes latest bootstrap log symlink"
+
+grep -q "Running Mac setup test and model warmup" "$HOME/Library/Logs/tigris-whisper/bootstrap-latest.log" && \
+    ok "bootstrap.sh log captures bootstrap output" || \
+    fail "bootstrap.sh log captures bootstrap output"
 
 grep -q "Selected model: mlx-community/whisper-large-v3-turbo-q4" "$bootstrap_out" && \
     ok "bootstrap.sh prints selected model" || \

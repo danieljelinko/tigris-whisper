@@ -33,6 +33,13 @@ To reveal the generated app in Finder:
 open -R ~/Applications/tigris-whisper.app
 ```
 
+Installer output is also written to:
+
+```bash
+~/Library/Logs/tigris-whisper/bootstrap-latest.log
+~/Library/Logs/tigris-whisper/install-latest.log
+```
+
 Uninstall from the install directory:
 
 ```bash

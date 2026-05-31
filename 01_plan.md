@@ -61,4 +61,5 @@ client change. All GPU options below are **Linux+NVIDIA only** — none help the
 - [x] 4.11 Improve Mac paste focus handling and paste-failure diagnostics
 - [x] 4.12 Pre-download selected MLX model with visible Hugging Face progress bars
 - [x] 4.13 Add helper script to change selected MLX model after install
-- [ ] 4.14 Future polish: menu bar controller, launch-at-login toggle, icon, signing/notarization/DMG
+- [x] 4.14 Tee bootstrap/install output to log files for SSH debugging
+- [ ] 4.15 Future polish: menu bar controller, launch-at-login toggle, icon, signing/notarization/DMG

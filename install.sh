@@ -12,6 +12,25 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OS="$(uname -s)"
 WHISPER_BACKEND="${WHISPER_BACKEND:-}"
+
+setup_log() {
+    [ "${TIGRIS_NO_LOG:-0}" = "1" ] && return 0
+    local log_dir log_file
+    if [ "$OS" = "Darwin" ]; then
+        log_dir="$HOME/Library/Logs/tigris-whisper"
+    else
+        log_dir="${XDG_STATE_HOME:-$HOME/.local/state}/tigris-whisper"
+    fi
+    mkdir -p "$log_dir"
+    log_file="$log_dir/install-$(date +%Y%m%d-%H%M%S).log"
+    ln -sf "$log_file" "$log_dir/install-latest.log"
+    exec > >(tee -a "$log_file") 2>&1
+    echo "Logging installer output to: $log_file"
+    echo "Latest installer log: $log_dir/install-latest.log"
+    echo ""
+}
+setup_log
+
 CONFIG_FILE="$SCRIPT_DIR/tigris-whisper.env"
 USER_WHISPER_MLX_MODEL="${WHISPER_MLX_MODEL:-}"
 if [ -f "$CONFIG_FILE" ]; then
@@ -89,6 +108,7 @@ if [ "$OS" = "Darwin" ]; then
     echo "App controls:      ./scripts/control_mac_app.sh status|stop|restart|logs"
     echo "Change model:      ./scripts/change_mlx_model.sh"
     echo "Verify/warm model: ./scripts/test_mac_setup.sh"
+    echo "Install log:       ~/Library/Logs/tigris-whisper/install-latest.log"
     echo "Uninstall:     ./uninstall.sh"
 
 # ─── Linux ────────────────────────────────────────────────────────────────────

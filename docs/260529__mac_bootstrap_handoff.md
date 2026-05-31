@@ -42,6 +42,9 @@ install/uninstall tests until the next clean Mac run:
   smoke test, and uninstall all read `tigris-whisper.env`
 - model warmup now pre-downloads the selected Hugging Face model in the
   foreground so progress bars are visible before the server starts
+- bootstrap/install output is tee'd to
+  `~/Library/Logs/tigris-whisper/bootstrap-latest.log` and
+  `~/Library/Logs/tigris-whisper/install-latest.log` for SSH debugging
 - the app launcher starts the daemon and writes logs to
   `~/Library/Logs/tigris-whisper/daemon.log` (same wrapper behavior was
   SSH-verified before rename; renamed paths are covered by tests)

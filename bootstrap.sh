@@ -33,6 +33,24 @@ REPO_URL="https://github.com/${REPO_SLUG}.git"
 REPO_REF="${WHISPER_REF:-main}"
 OS="$(uname -s)"
 
+setup_log() {
+    [ "${TIGRIS_NO_LOG:-0}" = "1" ] && return 0
+    local log_dir log_file
+    if [ "$OS" = "Darwin" ]; then
+        log_dir="$HOME/Library/Logs/tigris-whisper"
+    else
+        log_dir="${XDG_STATE_HOME:-$HOME/.local/state}/tigris-whisper"
+    fi
+    mkdir -p "$log_dir"
+    log_file="$log_dir/bootstrap-$(date +%Y%m%d-%H%M%S).log"
+    ln -sf "$log_file" "$log_dir/bootstrap-latest.log"
+    exec > >(tee -a "$log_file") 2>&1
+    echo "Logging bootstrap output to: $log_file"
+    echo "Latest bootstrap log: $log_dir/bootstrap-latest.log"
+    echo ""
+}
+setup_log
+
 # On macOS the Apple-recognised folder for dev projects is ~/Developer (Finder
 # gives it a hammer icon). On Linux, ~ keeps it simple. Either is a fine default.
 if [ "$OS" = "Darwin" ]; then DEFAULT_DIR="$HOME/Developer/tigris-whisper"
@@ -226,6 +244,8 @@ if [ "$OS" = "Darwin" ]; then
     echo "Notes:"
     echo "   • The app is the normal user path and runs the daemon in the background."
     echo "   • Model config: $INSTALL_DIR/tigris-whisper.env"
+    echo "   • Install logs: ~/Library/Logs/tigris-whisper/bootstrap-latest.log"
+    echo "                   ~/Library/Logs/tigris-whisper/install-latest.log"
     echo "   • To change model later: cd $INSTALL_DIR && ./scripts/change_mlx_model.sh --restart"
     echo "   • To check/stop/restart/logs: cd $INSTALL_DIR && ./scripts/control_mac_app.sh status|stop|restart|logs"
     echo "   • Manual/developer mode is: cd $INSTALL_DIR && ./run.sh"

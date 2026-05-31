@@ -36,6 +36,14 @@ That's it. The bootstrap script handles everything in order:
 | Model choice | Asks which local MLX Whisper model to use and saves it to `tigris-whisper.env` |
 | Model warmup | Runs `./scripts/test_mac_setup.sh`, which pre-downloads the model with Hugging Face progress bars, then starts mlx-whisper |
 
+Bootstrap and installer output are tee'd to log files so remote debugging does
+not require copy-pasting Terminal output:
+
+```bash
+~/Library/Logs/tigris-whisper/bootstrap-latest.log
+~/Library/Logs/tigris-whisper/install-latest.log
+```
+
 > `~/Developer` is Apple's recognised folder for development projects (Finder shows it with a hammer icon). To install elsewhere without being prompted:
 > ```bash
 > curl -fsSL https://raw.githubusercontent.com/danieljelinko/tigris-whisper/main/bootstrap.sh | WHISPER_INSTALL_DIR=~/my-dir bash
