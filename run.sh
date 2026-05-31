@@ -12,6 +12,7 @@ set -euo pipefail
 #
 # Overrides:
 #   WHISPER_BACKEND=docker_cuda|whispercpp_cpu|whispercpp_metal|mlx  (skip detection)
+#   WHISPER_MLX_MODEL=mlx-community/whisper-small-mlx-q4            (macOS model)
 #   WHISPER_LANG=fr    language hint passed through to the daemon
 #
 # Dry-run:
@@ -19,6 +20,14 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
+
+CONFIG_FILE="$SCRIPT_DIR/tigris-whisper.env"
+USER_WHISPER_MLX_MODEL="${WHISPER_MLX_MODEL:-}"
+if [ -f "$CONFIG_FILE" ]; then
+    # shellcheck source=/dev/null
+    set -a; source "$CONFIG_FILE"; set +a
+fi
+[ -n "$USER_WHISPER_MLX_MODEL" ] && export WHISPER_MLX_MODEL="$USER_WHISPER_MLX_MODEL"
 
 PRINT_ONLY=0
 for arg in "$@"; do [ "$arg" = "--print-backend" ] && PRINT_ONLY=1; done

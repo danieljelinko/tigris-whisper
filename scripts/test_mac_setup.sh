@@ -21,6 +21,14 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 FIXTURE="$REPO_DIR/tests/fixtures/sample_speech.wav"
 PORT=14444   # non-standard port so we don't collide with a running daemon
 PIXI="$(command -v pixi 2>/dev/null || printf '%s/.pixi/bin/pixi' "$HOME")"
+CONFIG_FILE="$REPO_DIR/tigris-whisper.env"
+USER_WHISPER_MLX_MODEL="${WHISPER_MLX_MODEL:-}"
+if [ -f "$CONFIG_FILE" ]; then
+    # shellcheck source=/dev/null
+    set -a; source "$CONFIG_FILE"; set +a
+fi
+[ -n "$USER_WHISPER_MLX_MODEL" ] && export WHISPER_MLX_MODEL="$USER_WHISPER_MLX_MODEL"
+WHISPER_MLX_MODEL="${WHISPER_MLX_MODEL:-mlx-community/whisper-large-v3-turbo-q4}"
 
 PASS=0; FAIL=0; WARN=0
 ok()   { echo "  ✅ PASS: $1"; PASS=$((PASS+1)); }
@@ -46,6 +54,7 @@ cache_size() {
 echo ""
 echo "=== tigris-whisper Mac smoke test (mlx-whisper) ==="
 echo "Repo: $REPO_DIR"
+echo "Model: $WHISPER_MLX_MODEL"
 cd "$REPO_DIR"
 
 # ─── 1. Hardware ──────────────────────────────────────────────────────────────
@@ -76,7 +85,7 @@ hr; echo "3. Key imports"
 
 # ─── 4. End-to-end: launch mlx server → transcribe fixture ───────────────────
 hr; echo "4. End-to-end transcription (mlx server + real audio)"
-echo "   NOTE: first run downloads the Whisper model (~1.5 GB)."
+echo "   NOTE: first run downloads the selected Whisper model."
 echo "   This can take several minutes. Progress lines below mean it is still working."
 SERVER_PID=""
 cleanup() { [ -n "$SERVER_PID" ] && kill "$SERVER_PID" 2>/dev/null || true; }
@@ -86,7 +95,7 @@ if [ ! -f "$FIXTURE" ]; then
     warn "Skipping (fixture not found: $FIXTURE)"
 else
     LOG="$(mktemp)"
-    HF_HUB_DISABLE_XET="${HF_HUB_DISABLE_XET:-1}" WHISPER_MLX_PORT="$PORT" "$PIXI" run python src/mlx_whisper_server.py >"$LOG" 2>&1 &
+    HF_HUB_DISABLE_XET="${HF_HUB_DISABLE_XET:-1}" WHISPER_MLX_MODEL="$WHISPER_MLX_MODEL" WHISPER_MLX_PORT="$PORT" "$PIXI" run python src/mlx_whisper_server.py >"$LOG" 2>&1 &
     SERVER_PID=$!
 
     echo -n "   Waiting for server (incl. possible model download)"

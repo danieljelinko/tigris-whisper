@@ -12,6 +12,13 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OS="$(uname -s)"
 WHISPER_BACKEND="${WHISPER_BACKEND:-}"
+CONFIG_FILE="$SCRIPT_DIR/tigris-whisper.env"
+USER_WHISPER_MLX_MODEL="${WHISPER_MLX_MODEL:-}"
+if [ -f "$CONFIG_FILE" ]; then
+    # shellcheck source=/dev/null
+    set -a; source "$CONFIG_FILE"; set +a
+fi
+[ -n "$USER_WHISPER_MLX_MODEL" ] && export WHISPER_MLX_MODEL="$USER_WHISPER_MLX_MODEL"
 
 # ─── Detect backend ───────────────────────────────────────────────────────────
 if [ -z "$WHISPER_BACKEND" ]; then
@@ -63,8 +70,9 @@ if [ "$OS" = "Darwin" ]; then
     echo ""
     echo "✓ macOS installation complete."
     echo "  Backend: mlx-whisper (Apple-Silicon native)."
+    echo "  Model: ${WHISPER_MLX_MODEL:-mlx-community/whisper-large-v3-turbo-q4}"
     echo "  Model warmup: bootstrap runs ./scripts/test_mac_setup.sh next."
-    echo "  First warmup downloads the Whisper model (~1.5 GB) and can take several minutes."
+    echo "  First warmup downloads the selected model and can take several minutes."
     echo "  Tip: to use whisper.cpp instead, run scripts/101_install_whispercpp.sh and"
     echo "       launch with WHISPER_BACKEND=whispercpp_metal ./run.sh"
     echo ""

@@ -8,6 +8,13 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OS="$(uname -s)"
+CONFIG_FILE="$SCRIPT_DIR/tigris-whisper.env"
+USER_WHISPER_MLX_MODEL="${WHISPER_MLX_MODEL:-}"
+if [ -f "$CONFIG_FILE" ]; then
+    # shellcheck source=/dev/null
+    set -a; source "$CONFIG_FILE"; set +a
+fi
+[ -n "$USER_WHISPER_MLX_MODEL" ] && export WHISPER_MLX_MODEL="$USER_WHISPER_MLX_MODEL"
 
 ASSUME_YES=0
 REMOVE_MODELS=1
@@ -137,6 +144,9 @@ if [ "$REMOVE_MODELS" -eq 1 ]; then
     if [ "$MODEL" != "$DEFAULT_MODEL" ]; then
         remove_path "$(hf_cache_dir_for_model "$MODEL")"
     fi
+    remove_path "$(hf_cache_dir_for_model "mlx-community/whisper-small-mlx-q4")"
+    remove_path "$(hf_cache_dir_for_model "mlx-community/whisper-base-mlx-q4")"
+    remove_path "$(hf_cache_dir_for_model "mlx-community/whisper-large-v3-turbo")"
 else
     echo "Kept HuggingFace model cache"
 fi

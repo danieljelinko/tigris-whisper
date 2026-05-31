@@ -6,9 +6,12 @@
   confirm hotkey→paste in a real text field.
 
 ## Next
-- On the Air: reinstall/regenerate app → launch it so macOS requests
-  Microphone at startup → grant/verify Mic + Accessibility for
+- On the Air: reinstall/regenerate app → choose a model → launch it so macOS
+  requests Microphone at startup → grant/verify Mic + Accessibility for
   **tigris-whisper** → manual hotkey→paste check.
+- If testing with `./run.sh`, grant Accessibility to the terminal app. Clipboard
+  copy working but paste failing means the remaining failure is the synthetic
+  Cmd+V path, not transcription.
 
 ## Blocked
 - Manual permission/hotkey validation still requires the Mac UI session. SSH can
@@ -17,6 +20,7 @@
 ## Done
 | Date | Task | Verified by |
 |---|---|---|
+| 2026-05-31 | Phase 4.10–4.11: model selection + paste diagnostics | Bootstrap writes `tigris-whisper.env`; `run.sh`, smoke test, install, uninstall read it; Mac paste now restores the original frontmost app through System Events and logs/notifies on `osascript` errors |
 | 2026-05-30 | Phase 4.9: background app lifecycle controls | Added `scripts/control_mac_app.sh status|start|stop|restart|logs`; app wrapper tracks child daemon PID; install/bootstrap print control commands; `tests/test_install_uninstall.sh` → 29 passed |
 | 2026-05-30 | Phase 4.8: startup Microphone permission request | Mac daemon now opens a short input stream at startup to trigger/list `tigris-whisper` in Microphone settings; Python compile and test suite green |
 | 2026-05-30 | Phase 4.7: bootstrap runs smoke test/model warmup automatically | `tests/test_install_uninstall.sh` covers fake-mac bootstrap invoking smoke test, warning that model download can take several minutes, final numbered `WHAT TO DO NEXT`, Finder launch, and background-start notification |

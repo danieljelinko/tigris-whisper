@@ -9,3 +9,4 @@
 # END Ruler Generated Files
 __pycache__/
 *.pyc
+tigris-whisper.env

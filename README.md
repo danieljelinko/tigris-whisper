@@ -19,8 +19,9 @@ macOS, runs the full installer, then runs the Mac smoke test to warm the model
 cache. The default macOS path uses mlx-whisper wheels, so it does not require
 Xcode CLT, Homebrew, or git. Re-running is safe.
 
-macOS only: the first smoke test/transcription downloads the Whisper model
-(~1.5 GB), which can take several minutes. After install, launch
+macOS only: bootstrap asks which local Whisper model to use, then the first
+smoke test/transcription downloads that model, which can take several minutes.
+After install, launch
 `~/Applications/tigris-whisper.app` and grant **Microphone** and
 **Accessibility** permissions to **tigris-whisper** in System Settings →
 Privacy & Security.
@@ -74,6 +75,21 @@ Control the background app from the install directory:
 
 Optional whisper.cpp Metal fallback: `./scripts/101_install_whispercpp.sh` then
 `WHISPER_BACKEND=whispercpp_metal ./run.sh`.
+
+macOS model choice is saved in `tigris-whisper.env`. Useful options:
+
+| Profile | Model | Use when |
+|---|---|---|
+| Balanced (default) | `mlx-community/whisper-large-v3-turbo-q4` | Best first choice on M-series Macs; good accuracy with lower RAM/download than full turbo |
+| Fast | `mlx-community/whisper-small-mlx-q4` | You want lower latency for short dictation and can accept more mistakes |
+| Very fast | `mlx-community/whisper-base-mlx-q4` | You prioritize speed over accuracy |
+| Best accuracy | `mlx-community/whisper-large-v3-turbo` | 16 GB+ Macs, noisy audio, multilingual use, or technical vocabulary |
+
+Override for one run:
+
+```bash
+WHISPER_MLX_MODEL=mlx-community/whisper-small-mlx-q4 ./run.sh
+```
 
 **Linux no-GPU setup:**
 ```bash

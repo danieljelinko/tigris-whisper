@@ -33,6 +33,7 @@ That's it. The bootstrap script handles everything in order:
 | Pixi | Installed via its standalone installer (no compiler needed) |
 | Python deps | `pixi install` creates a Python 3.12 env and installs prebuilt wheels, **including mlx-whisper**, plus `ffmpeg` for audio loading |
 | App wrapper | Creates `~/Applications/tigris-whisper.app` so users can launch a named app instead of Terminal |
+| Model choice | Asks which local MLX Whisper model to use and saves it to `tigris-whisper.env` |
 | Model warmup | Runs `./scripts/test_mac_setup.sh`, which starts mlx-whisper and downloads the model on first use |
 
 > `~/Developer` is Apple's recognised folder for development projects (Finder shows it with a hammer icon). To install elsewhere without being prompted:
@@ -43,10 +44,11 @@ That's it. The bootstrap script handles everything in order:
 **No Xcode Command Line Tools, no Homebrew, no compiling.** The repo comes as a
 `curl` tarball (curl is built into macOS) and Pixi provides Python without
 touching macOS developer-tool stubs such as `python3` or `install_name_tool`.
-The only large download is the **Whisper model (~1.5 GB), fetched automatically
+The only large download is the **selected Whisper model, fetched automatically
 from HuggingFace during the bootstrap smoke test or the first time you
-transcribe**. This can take several minutes; the test prints progress while it
-works. After the model is cached, later runs are much faster.
+transcribe**. Size depends on the model you choose. This can take several
+minutes; the test prints progress while it works. After the model is cached,
+later runs are much faster.
 
 If the install directory already exists from an older tarball install, bootstrap
 moves it aside to `tigris-whisper.backup.<timestamp>` before extracting.
@@ -98,6 +100,29 @@ Control the background app from the install directory:
 `./run.sh` is the manual/developer path from inside the repo. If you use that
 instead, grant permissions to your terminal app, not `tigris-whisper`.
 
+## 2.5. Choose a smaller or larger model
+
+Bootstrap asks for this during install and saves the answer in:
+
+```bash
+~/Developer/tigris-whisper/tigris-whisper.env
+```
+
+Recommended profiles:
+
+| Profile | Model | Recommendation |
+|---|---|---|
+| Balanced | `mlx-community/whisper-large-v3-turbo-q4` | Default for M1/M2/M3/M4, especially 8 GB Macs |
+| Fast | `mlx-community/whisper-small-mlx-q4` | Lower latency for short dictation; more errors |
+| Very fast | `mlx-community/whisper-base-mlx-q4` | Fastest practical option; use only if accuracy is acceptable |
+| Best accuracy | `mlx-community/whisper-large-v3-turbo` | Prefer on 16 GB+ Macs or for noisy/multilingual/technical speech |
+
+You can override for a single manual run:
+
+```bash
+WHISPER_MLX_MODEL=mlx-community/whisper-small-mlx-q4 ./run.sh
+```
+
 ## 3. Grant macOS permissions
 
 **This step is required.** Without it, the daemon starts but recording and/or
@@ -137,7 +162,7 @@ Bootstrap runs this automatically on macOS unless you set
 | Dispatch | `run.sh --print-backend` returns `mlx` |
 | Permissions | Prints reminder (cannot test programmatically) |
 
-All checks green? You're ready. The first run downloads the model (~1.5 GB), so
+All checks green? You're ready. The first run downloads the selected model, so
 this test may take several minutes the very first time.
 
 ---
@@ -212,6 +237,16 @@ default because those folders may be shared with other local ML projects.
 - Run the daemon from Terminal (not from a GUI launcher) so permissions attach
   to the right app.
 
+### Text is copied but not pasted
+- If you launched with `open ~/Applications/tigris-whisper.app`, grant
+  Accessibility to **tigris-whisper**.
+- If you launched with `./run.sh`, grant Accessibility to your terminal app
+  (Terminal, iTerm, or VS Code), not only to `tigris-whisper`.
+- The transcript remains in the clipboard, so you can press Cmd+V manually while
+  checking the permission.
+- Check `~/whisper_hotkey_mac.log`; paste failures now include the underlying
+  `osascript` error from macOS.
+
 ### Recording starts but no text appears
 - Check Microphone permission (step 4).
 - Watch `~/whisper_hotkey_mac.log` for errors.
@@ -219,14 +254,14 @@ default because those folders may be shared with other local ML projects.
   (should return a 400 or 422, not "connection refused").
 
 ### First transcription hangs for a long time
-That's the one-time model download (~1.5 GB from HuggingFace). Watch progress in
+That's the one-time selected model download from HuggingFace. Watch progress in
 the server log: `tail -f ~/.cache/whisper.cpp/mlx_server.log`. Once cached, later
 runs are instant. To pre-download, just run `./scripts/test_mac_setup.sh` once.
 
 ### Transcription is slow even after the model is cached
 - Confirm you're on Apple Silicon (`uname -m` → `arm64`). mlx only accelerates there.
-- 8 GB Macs are tight; close memory-hungry apps. The default is the 4-bit
-  `mlx-community/whisper-large-v3-turbo-q4` model.
+- 8 GB Macs are tight; close memory-hungry apps. Try `small-mlx-q4` or
+  `base-mlx-q4` from the model section if the default still feels slow.
 - As a fallback you can switch to whisper.cpp: run `./scripts/101_install_whispercpp.sh`
   then `WHISPER_BACKEND=whispercpp_metal ./run.sh`.
 
@@ -275,7 +310,7 @@ code, read:
 `tests/` is verified. Phase 2 is Mac-only work:
 
 1. **Verify the mlx backend** — run `./scripts/test_mac_setup.sh`. The
-   end-to-end check starts `src/mlx_whisper_server.py`, downloads the model, and
+   end-to-end check starts `src/mlx_whisper_server.py`, downloads the selected model, and
    transcribes a real WAV. If it's green, the backend works.
 2. **Polish `src/whisper_hotkey_mac_experimental.py`** — the hotkey + recording
    + paste logic. Test the golden path manually: hold Ctrl+Option+Space in a
@@ -288,7 +323,7 @@ code, read:
 uv run pytest            # 11 tests — backend_select unit + mlx-server contract
                          # (mlx-server test mocks the mlx boundary, so it runs anywhere)
 bash tests/test_run_dispatch.sh   # 6 shell dispatch tests
-bash tests/test_install_uninstall.sh  # 12 fake-mac install/uninstall assertions
+bash tests/test_install_uninstall.sh  # fake-mac install/uninstall assertions
 ```
 
 **TDD convention:** write the failing test first, then the minimum code to pass

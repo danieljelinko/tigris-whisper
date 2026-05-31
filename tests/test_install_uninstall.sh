@@ -86,6 +86,10 @@ grep -q "Normal launch:     open ~/Applications/tigris-whisper.app" "$install_ou
     ok "install.sh makes app launch the normal path" || \
     fail "install.sh makes app launch the normal path"
 
+grep -q "Model: mlx-community/whisper-large-v3-turbo-q4" "$install_out" && \
+    ok "install.sh prints selected/default mlx model" || \
+    fail "install.sh prints selected/default mlx model"
+
 grep -q "control_mac_app.sh status|stop|restart|logs" "$install_out" && \
     ok "install.sh prints app control commands" || \
     fail "install.sh prints app control commands"
@@ -129,6 +133,18 @@ fi
 grep -q "Running Mac setup test and model warmup" "$bootstrap_out" && \
     ok "bootstrap.sh announces automatic smoke test/model warmup" || \
     fail "bootstrap.sh announces automatic smoke test/model warmup"
+
+grep -q "Selected model: mlx-community/whisper-large-v3-turbo-q4" "$bootstrap_out" && \
+    ok "bootstrap.sh prints selected model" || \
+    fail "bootstrap.sh prints selected model"
+
+[ -f "$BOOTSTRAP_DIR/tigris-whisper.env" ] && \
+    ok "bootstrap.sh writes model config file" || \
+    fail "bootstrap.sh writes model config file"
+
+grep -q "WHISPER_MLX_MODEL=mlx-community/whisper-large-v3-turbo-q4" "$BOOTSTRAP_DIR/tigris-whisper.env" && \
+    ok "bootstrap.sh model config contains default model" || \
+    fail "bootstrap.sh model config contains default model"
 
 grep -q "can take several minutes" "$bootstrap_out" && \
     ok "bootstrap.sh warns model download can take several minutes" || \

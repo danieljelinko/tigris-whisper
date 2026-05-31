@@ -12,9 +12,10 @@ is transcribed locally and pasted into the active window. The repo lives at:
 Active branch: `main`
 
 The Mac backend is **mlx-whisper** (Apple-Silicon native, installs as Python
-wheels in a Pixi environment, no Homebrew, no compiler). The default model is
-`mlx-community/whisper-large-v3-turbo-q4`; it downloads from HuggingFace on
-first transcription. The CLI entry point is `./run.sh`; the user-facing entry
+wheels in a Pixi environment, no Homebrew, no compiler). Bootstrap asks which
+model to use and saves it in `tigris-whisper.env`; the default is
+`mlx-community/whisper-large-v3-turbo-q4`. The model downloads from HuggingFace
+on first transcription. The CLI entry point is `./run.sh`; the user-facing entry
 point is the generated `~/Applications/tigris-whisper.app`.
 
 ---
@@ -34,6 +35,8 @@ install/uninstall tests until the next clean Mac run:
 - installer creates `~/Applications/tigris-whisper.app`
 - bootstrap runs `./scripts/test_mac_setup.sh` automatically on macOS to verify
   setup and warm the model cache
+- bootstrap chooses/saves the MLX model before install; `run.sh`, app launch,
+  smoke test, and uninstall all read `tigris-whisper.env`
 - the app launcher starts the daemon and writes logs to
   `~/Library/Logs/tigris-whisper/daemon.log` (same wrapper behavior was
   SSH-verified before rename; renamed paths are covered by tests)
@@ -97,7 +100,7 @@ cd ~/Developer/tigris-whisper
 ./scripts/test_mac_setup.sh
 ```
 
-This starts the mlx-whisper server, **downloads the Whisper model (~1.5 GB on
+This starts the mlx-whisper server, **downloads the selected Whisper model on
 first run** — this can take several minutes), POSTs a real WAV, and asserts you get text back.
 Checks all pass? The backend works.
 
@@ -162,8 +165,10 @@ From `01_plan.md`:
   to that app, confirm manual hotkey→paste
 
 8 GB is tight for non-quantized `large-v3-turbo`; keep the default at
-`mlx-community/whisper-large-v3-turbo-q4` unless a later on-device test proves a
-better tradeoff. Record any later model changes in `03_decisions.md`.
+`mlx-community/whisper-large-v3-turbo-q4` for balanced installs. For faster
+short dictation, test `mlx-community/whisper-small-mlx-q4` and then
+`mlx-community/whisper-base-mlx-q4`; record any later model default change in
+`03_decisions.md`.
 
 Phase 3 (Windows, Parakeet, Voxtral) is future work, not committed.
 
@@ -176,8 +181,11 @@ logs/state paths, docs, and install/uninstall tests were updated together.
 ## Known constraints (from 04_learnings.md)
 
 - `mlx_whisper` only imports on Apple Silicon — the contract test mocks the boundary
-- First transcription downloads model lazily and can take minutes; pre-warm with `test_mac_setup.sh`
+- First transcription downloads the selected model lazily and can take minutes; pre-warm with `test_mac_setup.sh`
 - macOS `/usr/bin/git` is a stub — **do not call git without checking the path**
 - The daemon uses `pbcopy` + AppleScript paste on macOS to avoid `pyautogui`
 - Microphone and Accessibility permission must be granted to **tigris-whisper**
   when launched as the app, or to the terminal app when launched manually
+- If copied text does not paste, the likely cause is missing Accessibility for
+  the actual launcher identity; the daemon now logs the target app and the
+  `osascript` paste error.
