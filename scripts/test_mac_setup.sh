@@ -14,6 +14,10 @@
 #
 # Usage:
 #   ./scripts/test_mac_setup.sh
+#
+# Env:
+#   TIGRIS_SKIP_TRANSCRIPTION_TEST=1  skip the real audio transcription check
+#   TIGRIS_TRANSCRIPTION_TIMEOUT=120  seconds to wait for the sample response
 
 set -euo pipefail
 
@@ -29,6 +33,7 @@ if [ -f "$CONFIG_FILE" ]; then
 fi
 [ -n "$USER_WHISPER_MLX_MODEL" ] && export WHISPER_MLX_MODEL="$USER_WHISPER_MLX_MODEL"
 WHISPER_MLX_MODEL="${WHISPER_MLX_MODEL:-mlx-community/whisper-large-v3-turbo-q4}"
+TRANSCRIPTION_TIMEOUT="${TIGRIS_TRANSCRIPTION_TIMEOUT:-120}"
 
 PASS=0; FAIL=0; WARN=0
 ok()   { echo "  ✅ PASS: $1"; PASS=$((PASS+1)); }
@@ -98,12 +103,17 @@ fi
 
 # ─── 5. End-to-end: launch mlx server → transcribe fixture ───────────────────
 hr; echo "5. End-to-end transcription (mlx server + real audio)"
-echo "   Model is already cached; this step verifies real transcription."
+echo "   This sends a tiny bundled WAV file to the local server."
+echo "   It verifies that mlx-whisper can do a real transcription on this Mac."
+echo "   It can take 30–120 seconds on first run while MLX initializes/compiles."
+echo "   Skip with: TIGRIS_SKIP_TRANSCRIPTION_TEST=1 ./scripts/test_mac_setup.sh"
 SERVER_PID=""
 cleanup() { [ -n "$SERVER_PID" ] && kill "$SERVER_PID" 2>/dev/null || true; }
 trap cleanup EXIT
 
-if [ ! -f "$FIXTURE" ]; then
+if [ "${TIGRIS_SKIP_TRANSCRIPTION_TEST:-0}" = "1" ]; then
+    warn "Skipping real transcription because TIGRIS_SKIP_TRANSCRIPTION_TEST=1"
+elif [ ! -f "$FIXTURE" ]; then
     warn "Skipping (fixture not found: $FIXTURE)"
 else
     LOG="$(mktemp)"
@@ -126,7 +136,7 @@ else
         RESPONSE_FILE="$(mktemp)"
         CURL_LOG="$(mktemp)"
         echo "   Sending sample audio for transcription..."
-        echo "   Progress: waiting for first response."
+        echo "   Waiting up to ${TRANSCRIPTION_TIMEOUT}s for first response."
         START_TS="$(date +%s)"
         curl -sf -F "file=@$FIXTURE;type=audio/wav" \
             "http://127.0.0.1:$PORT/v1/audio/transcriptions" \
@@ -138,11 +148,21 @@ else
             ELAPSED=$((NOW_TS - START_TS))
             CACHE="$(cache_size)"
             [ -n "$CACHE" ] || CACHE="cache size not visible yet"
-            printf "   ... %4ss elapsed | server pid %s alive | %s\n" "$ELAPSED" "$SERVER_PID" "$CACHE"
+            if [ "$ELAPSED" -ge "$TRANSCRIPTION_TIMEOUT" ]; then
+                kill "$CURL_PID" 2>/dev/null || true
+                wait "$CURL_PID" 2>/dev/null || true
+                fail "Sample transcription timed out after ${TRANSCRIPTION_TIMEOUT}s. Server log:"
+                tail -20 "$LOG"
+                RESPONSE=""
+                break
+            fi
+            printf "   ... %4ss elapsed | real transcription still running | %s\n" "$ELAPSED" "$CACHE"
             sleep 5
         done
 
-        if wait "$CURL_PID"; then
+        if [ "${RESPONSE+x}" ]; then
+            :
+        elif wait "$CURL_PID"; then
             RESPONSE="$(cat "$RESPONSE_FILE")"
         else
             fail "Transcription request failed. curl log:"; cat "$CURL_LOG"

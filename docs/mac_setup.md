@@ -192,12 +192,18 @@ Bootstrap runs this automatically on macOS unless you set
 | Hardware | Apple Silicon chip detected |
 | Python | `pixi install` succeeds; Flask and daemon dependencies import |
 | **Model warmup** | Pre-downloads the selected model with Hugging Face progress bars |
-| **End-to-end** | Starts the mlx server, POSTs a real WAV, asserts text comes back |
+| **End-to-end** | Starts the mlx server, POSTs a tiny bundled WAV, asserts text comes back |
 | Dispatch | `run.sh --print-backend` returns `mlx` |
 | Permissions | Prints reminder (cannot test programmatically) |
 
 All checks green? You're ready. The first run downloads the selected model, so
-this test may take several minutes the very first time.
+this test may take several minutes the very first time. The real sample
+transcription can take 30-120 seconds while MLX initializes/compiles. If you
+only want install verification and model warmup, skip that part with:
+
+```bash
+TIGRIS_SKIP_TRANSCRIPTION_TEST=1 ./scripts/test_mac_setup.sh
+```
 
 ---
 

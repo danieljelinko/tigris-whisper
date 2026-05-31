@@ -112,7 +112,10 @@ cd ~/Developer/tigris-whisper
 ```
 
 This pre-downloads the selected Whisper model with Hugging Face progress bars,
-starts the mlx-whisper server, POSTs a real WAV, and asserts you get text back.
+starts the mlx-whisper server, POSTs a tiny bundled WAV, and asserts you get
+text back. The sample transcription can take 30-120 seconds on first run while
+MLX initializes; skip it with `TIGRIS_SKIP_TRANSCRIPTION_TEST=1` if you only
+need install/model-cache verification.
 Checks all pass? The backend works.
 
 ### Step 4 — Manual hotkey test

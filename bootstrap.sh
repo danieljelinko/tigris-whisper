@@ -21,6 +21,7 @@
 #   WHISPER_REF=some-branch        which git ref to fetch
 #   WHISPER_MLX_MODEL=repo/id      skip the macOS model prompt
 #   TIGRIS_SKIP_SMOKE_TEST=1       skip automatic Mac smoke test/model warmup
+#   TIGRIS_SKIP_TRANSCRIPTION_TEST=1 skip the real sample transcription check
 #
 # Re-running is safe — each step is skipped if already done.
 # Supported OS: macOS (Apple Silicon), Linux (Ubuntu/Debian/Fedora).
@@ -175,10 +176,13 @@ bash install.sh
 if [ "$OS" = "Darwin" ] && [ "${TIGRIS_SKIP_SMOKE_TEST:-0}" != "1" ]; then
     echo ""
     echo "Running Mac setup test and model warmup…"
-    echo "This starts the local mlx-whisper server and transcribes a sample audio file."
+    echo "This warms the model cache, starts the local mlx-whisper server,"
+    echo "and transcribes a tiny bundled sample audio file as a real end-to-end check."
     echo "Selected model: ${WHISPER_MLX_MODEL:-mlx-community/whisper-large-v3-turbo-q4}"
     echo "If this is the first run, the selected Whisper model downloads now."
     echo "That can take several minutes; Hugging Face progress bars will print while it works."
+    echo "The sample transcription can take 30–120s on first run while MLX initializes."
+    echo "To skip the real transcription check: TIGRIS_SKIP_TRANSCRIPTION_TEST=1"
     echo ""
     bash ./scripts/test_mac_setup.sh
 elif [ "$OS" = "Darwin" ]; then
