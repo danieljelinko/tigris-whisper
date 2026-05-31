@@ -15,8 +15,11 @@ The Mac backend is **mlx-whisper** (Apple-Silicon native, installs as Python
 wheels in a Pixi environment, no Homebrew, no compiler). Bootstrap asks which
 model to use and saves it in `tigris-whisper.env`; the default is
 `mlx-community/whisper-large-v3-turbo-q4`. The model downloads from HuggingFace
-on first transcription. The CLI entry point is `./run.sh`; the user-facing entry
-point is the generated `~/Applications/tigris-whisper.app`.
+on first transcription. The bootstrap choices are multilingual Whisper models;
+the official language list is
+`https://github.com/openai/whisper/blob/main/whisper/tokenizer.py`. The CLI
+entry point is `./run.sh`; the user-facing entry point is the generated
+`~/Applications/tigris-whisper.app`.
 
 ---
 

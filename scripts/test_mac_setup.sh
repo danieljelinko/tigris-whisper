@@ -55,6 +55,7 @@ echo ""
 echo "=== tigris-whisper Mac smoke test (mlx-whisper) ==="
 echo "Repo: $REPO_DIR"
 echo "Model: $WHISPER_MLX_MODEL"
+echo "Language scope: multilingual Whisper model"
 cd "$REPO_DIR"
 
 # ─── 1. Hardware ──────────────────────────────────────────────────────────────

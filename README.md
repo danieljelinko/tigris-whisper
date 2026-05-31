@@ -76,14 +76,18 @@ Control the background app from the install directory:
 Optional whisper.cpp Metal fallback: `./scripts/101_install_whispercpp.sh` then
 `WHISPER_BACKEND=whispercpp_metal ./run.sh`.
 
-macOS model choice is saved in `tigris-whisper.env`. Useful options:
+macOS model choice is saved in `tigris-whisper.env`. The offered models are
+multilingual Whisper models, not `.en` English-only models. OpenAI's model card
+describes Whisper as multilingual ASR/translation, and the official language
+token list is here:
+<https://github.com/openai/whisper/blob/main/whisper/tokenizer.py>.
 
-| Profile | Model | Use when |
-|---|---|---|
-| Balanced (default) | `mlx-community/whisper-large-v3-turbo-q4` | Best first choice on M-series Macs; good accuracy with lower RAM/download than full turbo |
-| Fast | `mlx-community/whisper-small-mlx-q4` | You want lower latency for short dictation and can accept more mistakes |
-| Very fast | `mlx-community/whisper-base-mlx-q4` | You prioritize speed over accuracy |
-| Best accuracy | `mlx-community/whisper-large-v3-turbo` | 16 GB+ Macs, noisy audio, multilingual use, or technical vocabulary |
+| Profile | Model | Language scope | Use when |
+|---|---|---|---|
+| Balanced (default) | `mlx-community/whisper-large-v3-turbo-q4` | Multilingual | Best first choice on M-series Macs; good accuracy with lower RAM/download than full turbo |
+| Fast | `mlx-community/whisper-small-mlx-q4` | Multilingual | You want lower latency for short dictation and can accept more mistakes |
+| Very fast | `mlx-community/whisper-base-mlx-q4` | Multilingual | You prioritize speed over accuracy |
+| Best accuracy | `mlx-community/whisper-large-v3-turbo` | Multilingual | 16 GB+ Macs, noisy audio, multilingual use, or technical vocabulary |
 
 Override for one run:
 

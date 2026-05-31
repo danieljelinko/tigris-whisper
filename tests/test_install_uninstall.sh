@@ -90,6 +90,14 @@ grep -q "Model: mlx-community/whisper-large-v3-turbo-q4" "$install_out" && \
     ok "install.sh prints selected/default mlx model" || \
     fail "install.sh prints selected/default mlx model"
 
+grep -q "Language scope: multilingual Whisper model" "$install_out" && \
+    ok "install.sh prints model language scope" || \
+    fail "install.sh prints model language scope"
+
+grep -q "openai/whisper/blob/main/whisper/tokenizer.py" "$install_out" && \
+    ok "install.sh prints language list link" || \
+    fail "install.sh prints language list link"
+
 grep -q "control_mac_app.sh status|stop|restart|logs" "$install_out" && \
     ok "install.sh prints app control commands" || \
     fail "install.sh prints app control commands"

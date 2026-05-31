@@ -71,6 +71,8 @@ if [ "$OS" = "Darwin" ]; then
     echo "✓ macOS installation complete."
     echo "  Backend: mlx-whisper (Apple-Silicon native)."
     echo "  Model: ${WHISPER_MLX_MODEL:-mlx-community/whisper-large-v3-turbo-q4}"
+    echo "  Language scope: multilingual Whisper model."
+    echo "  Language list: https://github.com/openai/whisper/blob/main/whisper/tokenizer.py"
     echo "  Model warmup: bootstrap runs ./scripts/test_mac_setup.sh next."
     echo "  First warmup downloads the selected model and can take several minutes."
     echo "  Tip: to use whisper.cpp instead, run scripts/101_install_whispercpp.sh and"

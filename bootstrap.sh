@@ -121,10 +121,13 @@ choose_mac_model() {
         profile="custom-env"
     elif [ -r /dev/tty ]; then
         echo "Choose the local Whisper model for this Mac:"
-        echo "  1. Balanced (recommended): large-v3-turbo-q4 — good accuracy, quantized, current default"
-        echo "  2. Fast: small-mlx-q4 — lower latency, less accurate"
-        echo "  3. Very fast: base-mlx-q4 — shortest dictation, noticeably less accurate"
-        echo "  4. Best accuracy: large-v3-turbo — larger download/RAM, slower than q4"
+        echo "  All choices below are multilingual Whisper models, not English-only models."
+        echo "  Language list: https://github.com/openai/whisper/blob/main/whisper/tokenizer.py"
+        echo ""
+        echo "  1. Balanced (recommended): large-v3-turbo-q4 — multilingual, good accuracy, quantized"
+        echo "  2. Fast: small-mlx-q4 — multilingual, lower latency, less accurate"
+        echo "  3. Very fast: base-mlx-q4 — multilingual, shortest dictation, noticeably less accurate"
+        echo "  4. Best accuracy: large-v3-turbo — multilingual, larger download/RAM"
         printf "Model choice [1]: "
         read -r reply < /dev/tty || reply=""
         case "${reply:-1}" in

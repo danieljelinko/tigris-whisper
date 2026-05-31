@@ -110,12 +110,22 @@ Bootstrap asks for this during install and saves the answer in:
 
 Recommended profiles:
 
-| Profile | Model | Recommendation |
-|---|---|---|
-| Balanced | `mlx-community/whisper-large-v3-turbo-q4` | Default for M1/M2/M3/M4, especially 8 GB Macs |
-| Fast | `mlx-community/whisper-small-mlx-q4` | Lower latency for short dictation; more errors |
-| Very fast | `mlx-community/whisper-base-mlx-q4` | Fastest practical option; use only if accuracy is acceptable |
-| Best accuracy | `mlx-community/whisper-large-v3-turbo` | Prefer on 16 GB+ Macs or for noisy/multilingual/technical speech |
+All four choices are multilingual Whisper models, not `.en` English-only
+models. OpenAI's tokenizer has the official language list:
+<https://github.com/openai/whisper/blob/main/whisper/tokenizer.py>.
+
+| Profile | Model | Language scope | Recommendation |
+|---|---|---|---|
+| Balanced | `mlx-community/whisper-large-v3-turbo-q4` | Multilingual | Default for M1/M2/M3/M4, especially 8 GB Macs |
+| Fast | `mlx-community/whisper-small-mlx-q4` | Multilingual | Lower latency for short dictation; more errors |
+| Very fast | `mlx-community/whisper-base-mlx-q4` | Multilingual | Fastest practical option; use only if accuracy is acceptable |
+| Best accuracy | `mlx-community/whisper-large-v3-turbo` | Multilingual | Prefer on 16 GB+ Macs or for noisy/multilingual/technical speech |
+
+OpenAI notes that Whisper performance varies by language and amount of training
+data, so "supported" does not mean equally accurate in every language. For
+English-only dictation there are smaller `.en` Whisper variants in the broader
+MLX collection, but tigris-whisper does not offer those in bootstrap because the
+default goal is multilingual local dictation.
 
 You can override for a single manual run:
 
