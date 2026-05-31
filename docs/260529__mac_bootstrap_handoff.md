@@ -137,6 +137,7 @@ scripts/
   create_mac_app.sh             generates ~/Applications/tigris-whisper.app
   lib/backend_mlx.sh            launches the mlx server
   control_mac_app.sh            status/stop/restart/logs for the app wrapper
+  change_mlx_model.sh           picker/helper to update tigris-whisper.env
   test_mac_setup.sh             smoke test (run this first)
   101_install_whispercpp.sh     optional: builds whisper.cpp Metal as fallback
 tests/

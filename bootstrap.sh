@@ -217,6 +217,7 @@ if [ "$OS" = "Darwin" ]; then
     echo "Notes:"
     echo "   • The app is the normal user path and runs the daemon in the background."
     echo "   • Model config: $INSTALL_DIR/tigris-whisper.env"
+    echo "   • To change model later: cd $INSTALL_DIR && ./scripts/change_mlx_model.sh --restart"
     echo "   • To check/stop/restart/logs: cd $INSTALL_DIR && ./scripts/control_mac_app.sh status|stop|restart|logs"
     echo "   • Manual/developer mode is: cd $INSTALL_DIR && ./run.sh"
     echo "   • If you use manual mode, grant permissions to your terminal app instead."

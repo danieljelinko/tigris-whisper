@@ -23,6 +23,7 @@
 ## Done
 | Date | Task | Verified by |
 |---|---|---|
+| 2026-05-31 | Phase 4.13: post-install model switcher | Added `scripts/change_mlx_model.sh` so users can pick a profile or pass a HF model ID; it updates `tigris-whisper.env` and can restart the Mac app with `--restart` |
 | 2026-05-31 | Phase 4.12: visible model download progress | Added `scripts/download_mlx_model.py`; `run.sh` MLX backend and `scripts/test_mac_setup.sh` pre-download the selected model in the foreground so Hugging Face/tqdm progress bars are visible |
 | 2026-05-31 | Mac Accessibility preflight | Daemon now checks `AXIsProcessTrusted()` at startup and logs/notifies clear instructions before pynput's lower-level "process is not trusted" warning; `run.sh` now prints the Mac hotkey as Ctrl+Option+Space |
 | 2026-05-31 | Phase 4.10–4.11: model selection + paste diagnostics | Bootstrap writes `tigris-whisper.env`; `run.sh`, smoke test, install, uninstall read it; Mac paste now restores the original frontmost app through System Events and logs/notifies on `osascript` errors; installer/docs say offered models are multilingual and link to OpenAI's language list |

@@ -99,6 +99,14 @@ WHISPER_MLX_MODEL=mlx-community/whisper-small-mlx-q4 ./run.sh
 When `./run.sh` needs to download a model, it runs the same foreground
 pre-download helper first so Terminal users can see Hugging Face progress bars.
 
+Change the installed model later without editing files:
+
+```bash
+./scripts/change_mlx_model.sh
+./scripts/change_mlx_model.sh fast --restart
+./scripts/change_mlx_model.sh mlx-community/whisper-small-mlx-q4 --restart
+```
+
 **Linux no-GPU setup:**
 ```bash
 ./scripts/101_install_whispercpp.sh   # builds whisper-server CPU-only + downloads model

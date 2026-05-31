@@ -133,6 +133,20 @@ You can override for a single manual run:
 WHISPER_MLX_MODEL=mlx-community/whisper-small-mlx-q4 ./run.sh
 ```
 
+To change the installed model permanently, use the helper script:
+
+```bash
+cd ~/Developer/tigris-whisper
+./scripts/change_mlx_model.sh
+```
+
+It rewrites `tigris-whisper.env`. Pass `--restart` to restart the app after
+saving:
+
+```bash
+./scripts/change_mlx_model.sh fast --restart
+```
+
 ## 3. Grant macOS permissions
 
 **This step is required.** Without it, the daemon starts but recording and/or
