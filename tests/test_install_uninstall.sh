@@ -45,6 +45,25 @@ esac
 EOF
 chmod +x "$FAKE_BIN/git"
 
+cat > "$FAKE_BIN/osacompile" <<'EOF'
+#!/usr/bin/env bash
+out=""
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        -o) out="$2"; shift ;;
+    esac
+    shift || true
+done
+[ -n "$out" ] || { echo "missing -o" >&2; exit 1; }
+mkdir -p "$out/Contents/MacOS" "$out/Contents/Resources"
+cat > "$out/Contents/MacOS/applet" <<'APPLET'
+#!/usr/bin/env bash
+# fake osacompile applet delegates to launcher.sh
+APPLET
+chmod +x "$out/Contents/MacOS/applet"
+EOF
+chmod +x "$FAKE_BIN/osacompile"
+
 export PATH="$FAKE_BIN:$PATH"
 export HOME="$HOME_DIR"
 export WHISPER_APP_PARENT="$APP_PARENT"

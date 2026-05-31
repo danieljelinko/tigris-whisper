@@ -24,6 +24,7 @@
 | Date | Task | Verified by |
 |---|---|---|
 | 2026-05-31 | Phase 4.14: installer logs for remote debugging | `bootstrap.sh` and `install.sh` now tee all output to timestamped logs plus `bootstrap-latest.log` / `install-latest.log` under `~/Library/Logs/tigris-whisper` on macOS |
+| 2026-05-31 | Fixed AppleScript app generation order | Install log showed `osacompile ... errOSASystemError (-1750)` because the target `.app` directory existed before `osacompile`; `create_mac_app.sh` now lets `osacompile` create the bundle first |
 | 2026-05-31 | Phase 4.13: post-install model switcher | Added `scripts/change_mlx_model.sh` so users can pick a profile or pass a HF model ID; it updates `tigris-whisper.env` and can restart the Mac app with `--restart` |
 | 2026-05-31 | Mac app LaunchServices error -600 fix | `scripts/create_mac_app.sh` now generates a native AppleScript applet with `osacompile` and stores our shell launcher as `Contents/Resources/launcher.sh`; fake-mac tests assert the helper exists |
 | 2026-05-31 | Mac smoke test bounded sample transcription | `scripts/test_mac_setup.sh` now explains that it sends a bundled WAV for a real end-to-end check, times it out with `TIGRIS_TRANSCRIPTION_TIMEOUT` default 120s, and supports `TIGRIS_SKIP_TRANSCRIPTION_TEST=1` |

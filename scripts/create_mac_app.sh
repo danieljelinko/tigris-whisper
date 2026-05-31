@@ -19,9 +19,6 @@ HELPER="launcher.sh"
 BUNDLE_ID="${WHISPER_APP_BUNDLE_ID:-com.danieljelinko.tigris-whisper}"
 
 rm -rf "$APP_DIR"
-mkdir -p "$MACOS" "$RESOURCES"
-printf "%s\n" "$REPO_DIR" > "$RESOURCES/repo_path"
-
 if command -v osacompile >/dev/null 2>&1; then
     # Build a proper AppleScript applet so LaunchServices has a native app
     # executable instead of trying to launch a shell script as CFBundleExecutable.
@@ -29,8 +26,11 @@ if command -v osacompile >/dev/null 2>&1; then
         'do shell script "nohup " & quoted form of (POSIX path of (path to me) & "Contents/Resources/launcher.sh") & " >/dev/null 2>&1 &"'
     mkdir -p "$MACOS" "$RESOURCES"
     [ -x "$MACOS/applet" ] && mv "$MACOS/applet" "$MACOS/$EXECUTABLE"
-    printf "%s\n" "$REPO_DIR" > "$RESOURCES/repo_path"
+else
+    mkdir -p "$MACOS" "$RESOURCES"
 fi
+
+printf "%s\n" "$REPO_DIR" > "$RESOURCES/repo_path"
 
 cat > "$CONTENTS/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
