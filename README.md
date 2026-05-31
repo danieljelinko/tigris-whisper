@@ -27,6 +27,12 @@ progress bars are visible. After install, launch
 **Accessibility** permissions to **tigris-whisper** in System Settings →
 Privacy & Security.
 
+To reveal the generated app in Finder:
+
+```bash
+open -R ~/Applications/tigris-whisper.app
+```
+
 Uninstall from the install directory:
 
 ```bash
@@ -57,6 +63,9 @@ the same `POST /v1/audio/transcriptions` endpoint on `:4444`, so the Python daem
 ./install.sh   # installs Pixi + Python wheels incl. mlx-whisper
 open ~/Applications/tigris-whisper.app
 ```
+The app is installed in your user Applications folder (`~/Applications`), not
+necessarily the system-wide `/Applications` folder shown by Finder's sidebar.
+Use `open -R ~/Applications/tigris-whisper.app` to reveal it visually.
 The generated app wrapper is the normal user path. It runs the same daemon as
 `./run.sh`, but gives macOS a named app for Microphone and Accessibility
 permissions. `./run.sh` is the manual/developer path from inside the repo; if

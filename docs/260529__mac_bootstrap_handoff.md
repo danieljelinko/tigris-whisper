@@ -84,7 +84,13 @@ If you still see a CLT dialog, check:
 open ~/Applications/tigris-whisper.app
 ```
 
-You can also use Finder → Applications → double-click `tigris-whisper.app`.
+To reveal the exact app in Finder:
+```bash
+open -R ~/Applications/tigris-whisper.app
+```
+
+The app lives in the user's `~/Applications` folder. Finder's sidebar
+Applications item may open `/Applications`, where it will not appear.
 Launching first matters because the daemon now requests Microphone access at
 startup; that request is what makes the app appear under Microphone settings.
 

@@ -86,6 +86,10 @@ grep -q "Normal launch:     open ~/Applications/tigris-whisper.app" "$install_ou
     ok "install.sh makes app launch the normal path" || \
     fail "install.sh makes app launch the normal path"
 
+grep -q "Reveal in Finder:  open -R ~/Applications/tigris-whisper.app" "$install_out" && \
+    ok "install.sh prints Finder reveal command" || \
+    fail "install.sh prints Finder reveal command"
+
 grep -q "Model: mlx-community/whisper-large-v3-turbo-q4" "$install_out" && \
     ok "install.sh prints selected/default mlx model" || \
     fail "install.sh prints selected/default mlx model"
@@ -182,9 +186,13 @@ grep -q "1. Launch the application:" "$bootstrap_out" && \
     ok "bootstrap.sh gives numbered app launch step" || \
     fail "bootstrap.sh gives numbered app launch step"
 
-grep -q "Finder → Applications → double-click tigris-whisper.app" "$bootstrap_out" && \
-    ok "bootstrap.sh includes Finder launch path" || \
-    fail "bootstrap.sh includes Finder launch path"
+grep -q "open -R ~/Applications/tigris-whisper.app" "$bootstrap_out" && \
+    ok "bootstrap.sh includes Finder reveal path" || \
+    fail "bootstrap.sh includes Finder reveal path"
+
+grep -q "Finder's sidebar Applications may show /Applications" "$bootstrap_out" && \
+    ok "bootstrap.sh explains user Applications folder" || \
+    fail "bootstrap.sh explains user Applications folder"
 
 if grep -q "may not appear in Microphone settings until it asks once" "$bootstrap_out"; then
     fail "bootstrap.sh should not say Microphone waits for first hotkey"

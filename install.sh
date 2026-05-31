@@ -84,6 +84,7 @@ if [ "$OS" = "Darwin" ]; then
     echo "     (If you run ./run.sh manually instead, grant permissions to your terminal app.)"
     echo ""
     echo "Normal launch:     open ~/Applications/tigris-whisper.app"
+    echo "Reveal in Finder:  open -R ~/Applications/tigris-whisper.app"
     echo "Manual/dev launch: ./run.sh"
     echo "App controls:      ./scripts/control_mac_app.sh status|stop|restart|logs"
     echo "Change model:      ./scripts/change_mlx_model.sh"

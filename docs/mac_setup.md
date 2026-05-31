@@ -73,6 +73,15 @@ open ~/Applications/tigris-whisper.app
 You can also open **Finder → Applications** and double-click
 **tigris-whisper.app**.
 
+If you do not see it there, that is expected on some Macs: the app is installed
+in your user Applications folder (`~/Applications`), while Finder's sidebar
+Applications item often opens the system-wide `/Applications` folder. Reveal the
+exact app in Finder with:
+
+```bash
+open -R ~/Applications/tigris-whisper.app
+```
+
 This is the normal user path. The app runs the same local daemon as `./run.sh`,
 but gives macOS a named app for Microphone and Accessibility permissions. It
 writes logs to:

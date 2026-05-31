@@ -121,5 +121,7 @@ chmod +x "$MACOS/$EXECUTABLE"
 
 echo "✓ Created $APP_DIR"
 echo "  Logs: $HOME/Library/Logs/tigris-whisper/daemon.log"
-echo "  Double-click it from Finder, or run:"
+echo "  To reveal it in Finder, run:"
+echo "    open -R \"$APP_DIR\""
+echo "  To launch it from Terminal, run:"
 echo "    open \"$APP_DIR\""
