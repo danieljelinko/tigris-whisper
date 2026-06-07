@@ -264,7 +264,7 @@ else
     echo "   cd $INSTALL_DIR && ./run.sh"
     echo ""
     echo "2. Use it:"
-    echo "   Hold  Ctrl + Option + Space  to record"
+    echo "   Hold  Ctrl + Alt + Space  to record"
     echo "   Release Ctrl to transcribe and paste into the active app"
     echo ""
     echo "3. To uninstall later:"
