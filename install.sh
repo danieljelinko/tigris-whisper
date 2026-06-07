@@ -206,14 +206,7 @@ elif [ "$OS" = "Linux" ]; then
         echo ""
         echo "Pre-downloading faster-whisper model '${FASTER_WHISPER_MODEL}'…"
         echo "(First download can take a few minutes; progress shown below.)"
-        uv run python -c "
-from faster_whisper import WhisperModel
-import os
-model_id = os.environ['FASTER_WHISPER_MODEL']
-print(f'Downloading {model_id}…')
-WhisperModel(model_id, device='cpu', compute_type='int8')
-print('Download complete.')
-"
+        uv run python "$SCRIPT_DIR/scripts/download_faster_whisper_model.py"
 
     else
         echo ""
