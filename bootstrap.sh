@@ -108,6 +108,28 @@ fetch_repo() {
         git -C "$INSTALL_DIR" pull --ff-only && return 0
     fi
 
+    # Existing non-git directory (e.g. a previous tarball install) — ask to replace.
+    if [ -e "$INSTALL_DIR" ] && [ -n "$(ls -A "$INSTALL_DIR" 2>/dev/null)" ]; then
+        echo "An existing install was found at: $INSTALL_DIR"
+        local _reply=""
+        if [ -r /dev/tty ]; then
+            printf "Remove it and reinstall the latest version? [y/N]: "
+            read -r _reply < /dev/tty || _reply=""
+        fi
+        case "${_reply,,}" in
+            y|yes)
+                local backup_dir="${INSTALL_DIR}.backup.$(date +%Y%m%d%H%M%S)"
+                echo "Moving existing install aside → $backup_dir"
+                mv "$INSTALL_DIR" "$backup_dir"
+                ;;
+            *)
+                echo "Keeping existing install. Re-run bootstrap and choose a different directory,"
+                echo "or cd into $INSTALL_DIR and run: git pull && ./install.sh"
+                exit 0
+                ;;
+        esac
+    fi
+
     if git_works; then
         echo "Cloning with git (ref: $REPO_REF)…"
         git clone --branch "$REPO_REF" "$REPO_URL" "$INSTALL_DIR"
@@ -115,13 +137,6 @@ fetch_repo() {
         # No working git (macOS stub or missing binary) → tarball via curl.
         echo "git not available — downloading tarball with curl (no Xcode CLT needed)…"
         local url="https://github.com/${REPO_SLUG}/archive/refs/heads/${REPO_REF}.tar.gz"
-        if [ -e "$INSTALL_DIR" ] && [ -n "$(ls -A "$INSTALL_DIR" 2>/dev/null)" ]; then
-            local backup_dir="${INSTALL_DIR}.backup.$(date +%Y%m%d%H%M%S)"
-            echo "Existing non-git install found; moving it aside for a clean install:"
-            echo "  $INSTALL_DIR"
-            echo "  → $backup_dir"
-            mv "$INSTALL_DIR" "$backup_dir"
-        fi
         mkdir -p "$INSTALL_DIR"
         # --strip-components=1 drops the GitHub-added top-level dir name.
         curl -fsSL "$url" | tar -xz --strip-components=1 -C "$INSTALL_DIR"
