@@ -8,7 +8,7 @@ set -euo pipefail
 # Dispatch:
 #   Darwin              → mlx-whisper
 #   Linux + NVIDIA GPU  → Docker + CUDA   (existing proven path)
-#   Linux, no GPU       → whisper.cpp CPU
+#   Linux, no GPU       → faster-whisper CPU (whisper.cpp CPU available via override)
 #
 # Overrides:
 #   WHISPER_BACKEND=docker_cuda|whispercpp_cpu|whispercpp_metal|mlx  (skip detection)
@@ -86,6 +86,11 @@ docker_cuda)
     # shellcheck source=scripts/lib/backend_docker.sh
     source "$SCRIPT_DIR/scripts/lib/backend_docker.sh"
     ensure_docker_backend
+    ;;
+faster_whisper)
+    # shellcheck source=scripts/lib/backend_faster_whisper.sh
+    source "$SCRIPT_DIR/scripts/lib/backend_faster_whisper.sh"
+    ensure_faster_whisper_backend
     ;;
 whispercpp_cpu)
     # shellcheck source=scripts/lib/backend_whispercpp.sh

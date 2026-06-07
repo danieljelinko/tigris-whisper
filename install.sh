@@ -46,7 +46,7 @@ if [ -z "$WHISPER_BACKEND" ]; then
     elif command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi -L >/dev/null 2>&1; then
         WHISPER_BACKEND="docker_cuda"
     else
-        WHISPER_BACKEND="whispercpp_cpu"
+        WHISPER_BACKEND="faster_whisper"
     fi
 fi
 
@@ -161,6 +161,60 @@ elif [ "$OS" = "Linux" ]; then
         }
         echo "✓ Docker present. Build or pull the whisper-assistant image before running."
         echo "  See README.md → Installation → step 0."
+
+    elif [ "$WHISPER_BACKEND" = "faster_whisper" ]; then
+        echo ""
+        echo "── faster-whisper (CPU) ──"
+
+        # Model selection
+        local_fw_model="${FASTER_WHISPER_MODEL:-}"
+        if [ -z "$local_fw_model" ] && [ -r /dev/tty ]; then
+            echo "Choose the Whisper model for transcription:"
+            echo "  All choices are multilingual Whisper models."
+            echo "  Language list: https://github.com/openai/whisper/blob/main/whisper/tokenizer.py"
+            echo ""
+            echo "  1. Balanced (default): small          — ~490 MB, good accuracy"
+            echo "  2. Fast:               base            — ~145 MB, lower latency"
+            echo "  3. Very fast:          tiny            — ~75 MB, fastest"
+            echo "  4. Best accuracy:      large-v3-turbo  — ~1.6 GB, slower on CPU"
+            printf "Model choice [1]: "
+            read -r _fw_reply < /dev/tty || _fw_reply=""
+            case "${_fw_reply:-1}" in
+                1) local_fw_model="small" ;;
+                2) local_fw_model="base" ;;
+                3) local_fw_model="tiny" ;;
+                4) local_fw_model="large-v3-turbo" ;;
+                *) local_fw_model="small" ;;
+            esac
+        fi
+        local_fw_model="${local_fw_model:-small}"
+        export FASTER_WHISPER_MODEL="$local_fw_model"
+
+        # Write config (preserve any existing Mac keys)
+        _fw_tmp="$(mktemp)"
+        if [ -f "$CONFIG_FILE" ]; then
+            grep -v '^export FASTER_WHISPER_MODEL=' "$CONFIG_FILE" > "$_fw_tmp" || true
+        fi
+        printf 'export FASTER_WHISPER_MODEL=%q\n' "$local_fw_model" >> "$_fw_tmp"
+        mv "$_fw_tmp" "$CONFIG_FILE"
+
+        echo ""
+        echo "Selected model: $FASTER_WHISPER_MODEL"
+        echo "Saved model config: $CONFIG_FILE"
+
+        # Pre-download
+        echo ""
+        echo "Pre-downloading faster-whisper model '${FASTER_WHISPER_MODEL}'…"
+        echo "(First download can take a few minutes; progress shown below.)"
+        uv run python -c "
+from faster_whisper import WhisperModel
+import os
+model_id = os.environ['FASTER_WHISPER_MODEL']
+print(f'Downloading {model_id}…')
+WhisperModel(model_id, device='cpu', compute_type='int8')
+print('Download complete.')
+"
+
     else
         echo ""
         echo "── whisper.cpp (CPU) ──"
@@ -172,6 +226,7 @@ elif [ "$OS" = "Linux" ]; then
     echo ""
     echo "✓ Linux installation complete."
     echo "Run:  ./run.sh"
+    echo "Change model: ./scripts/change_faster_whisper_model.sh"
     echo "Uninstall: ./uninstall.sh"
 
 else

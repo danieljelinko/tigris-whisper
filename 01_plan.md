@@ -40,12 +40,22 @@ mocked, and the real inference is verified on-device.
 - [ ] 2.4 **on-device:** launch app, confirm startup Mic prompt + Accessibility, confirm hotkey→paste with selected model on 8 GB
 - [x] 2.5 tarball-based bootstrap (curl fallback when git absent) → zero Xcode CLT for end users
 
-## Phase 3 — Optional future backends / platforms (not committed; see 03_decisions)
+## Phase 3 — faster-whisper Linux CPU backend
+Replaces whisper.cpp CPU as the default Linux no-GPU backend. Same `/v1/audio/transcriptions`
+contract; no client change. whisper.cpp stays available via `WHISPER_BACKEND=whispercpp_cpu`.
+- [x] 3.1 `src/faster_whisper_server.py` (Flask, lazy import) + `scripts/lib/backend_faster_whisper.sh`
+- [x] 3.2 `backend_select.py` routes Linux no-GPU → `faster_whisper`
+- [x] 3.3 `pyproject.toml` adds `faster-whisper; sys_platform == 'linux'`
+- [x] 3.4 `install.sh` model picker for Linux (small/base/tiny/large-v3-turbo); pre-downloads model; saves to `tigris-whisper.env`
+- [x] 3.5 `scripts/change_faster_whisper_model.sh` — post-install model switcher
+- [ ] 3.6 Linux end-to-end test: bootstrap → model download → `./run.sh` → hotkey→paste
+
+## Phase 3b — Optional future backends / platforms (not committed; see 03_decisions)
 All slot into the same pluggable pattern: serve OpenAI-shape `/v1/audio/transcriptions` on :4444, no
 client change. All GPU options below are **Linux+NVIDIA only** — none help the Mac.
-- [ ] 3.1 Windows support: `backend_select` "Windows" case + either WSL2 (run.sh as-is, Docker+CUDA works) or native `run.ps1`; win client paste = `ctrl+v`, notify via `win10toast`
-- [ ] 3.2 NVIDIA Parakeet-TDT-0.6B v3 backend (NeMo FastAPI wrapper) — fastest on this box, fits 8 GB VRAM easily
-- [ ] 3.3 Voxtral-Mini-4B backend via vLLM (OpenAI-compatible) — **needs a 4-bit quantized (AWQ/GPTQ) build to fit this box's 8 GB VRAM**; bf16 wants ≥16 GB
+- [ ] 3b.1 Windows support: `backend_select` "Windows" case + either WSL2 (run.sh as-is, Docker+CUDA works) or native `run.ps1`; win client paste = `ctrl+v`, notify via `win10toast`
+- [ ] 3b.2 NVIDIA Parakeet-TDT-0.6B v3 backend (NeMo FastAPI wrapper) — fastest on this box, fits 8 GB VRAM easily
+- [ ] 3b.3 Voxtral-Mini-4B backend via vLLM (OpenAI-compatible) — **needs a 4-bit quantized (AWQ/GPTQ) build to fit this box's 8 GB VRAM**; bf16 wants ≥16 GB
 
 ## Phase 4 — Mac app wrapper / user-facing install
 - [x] 4.1 Generate `tigris-whisper.app` during Mac install, without Xcode/CLT

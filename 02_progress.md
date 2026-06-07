@@ -1,6 +1,7 @@
 # 02 · Progress
 
 ## In flight
+- Phase 3.6: Linux end-to-end test — bootstrap → faster-whisper model download → `./run.sh` → hotkey→paste on Feynman (Linux, no GPU).
 - Phase 4.4: manual GUI test — launch **tigris-whisper.app** from Finder or
   `open`, confirm the startup Microphone prompt appears, grant Accessibility,
   confirm hotkey→paste in a real text field.
@@ -22,6 +23,11 @@
 
 ## Done
 | Date | Task | Verified by |
+|---|---|---|
+| 2026-06-07 | Phase 3.1–3.5: faster-whisper Linux CPU backend | `src/faster_whisper_server.py`, `scripts/lib/backend_faster_whisper.sh`, `scripts/change_faster_whisper_model.sh`; `backend_select` routes Linux no-GPU → `faster_whisper`; install.sh adds model picker + pre-download |
+| 2026-06-07 | Fix Linux bootstrap: git at /usr/bin/git now correctly used on Linux (was rejected as macOS stub) | bootstrap.sh `git_works()` now only skips /usr/bin/git on Darwin |
+| 2026-06-07 | Fix Linux install: `python3-dev` added to apt deps (evdev build needs Python.h) | install.sh |
+| 2026-06-07 | Fix Linux messages: removed `test_mac_setup.sh` hint from `101_install_whispercpp.sh`; fixed hotkey in bootstrap Linux WHAT TO DO NEXT | 101_install_whispercpp.sh, bootstrap.sh |
 |---|---|---|
 | 2026-05-31 | Phase 4.14: installer logs for remote debugging | `bootstrap.sh` and `install.sh` now tee all output to timestamped logs plus `bootstrap-latest.log` / `install-latest.log` under `~/Library/Logs/tigris-whisper` on macOS |
 | 2026-05-31 | Fixed AppleScript app generation order | Install log showed `osacompile ... errOSASystemError (-1750)` because the target `.app` directory existed before `osacompile`; `create_mac_app.sh` now lets `osacompile` create the bundle first |

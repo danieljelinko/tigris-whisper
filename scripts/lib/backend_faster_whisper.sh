@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Sourceable: ensure_faster_whisper_backend
+# Launches faster_whisper_server.py via uv on :4444. Idempotent: if :4444
+# already answers, reuse it.
+
+FASTER_WHISPER_PORT="${FASTER_WHISPER_PORT:-4444}"
+_FW_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+_FW_LOG_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/tigris-whisper"
+FASTER_WHISPER_SERVER_PID=""
+
+ensure_faster_whisper_backend() {
+    if curl -sf "http://localhost:${FASTER_WHISPER_PORT}" >/dev/null 2>&1; then
+        echo "✓ faster-whisper server already responding on :${FASTER_WHISPER_PORT}"; return 0
+    fi
+
+    local model="${FASTER_WHISPER_MODEL:-small}"
+    mkdir -p "$_FW_LOG_DIR"
+
+    echo "Starting faster-whisper server (model: $model)…"
+    FASTER_WHISPER_MODEL="$model" \
+        uv run "$_FW_SCRIPT_DIR/src/faster_whisper_server.py" \
+        >"$_FW_LOG_DIR/faster_whisper_server.log" 2>&1 &
+    FASTER_WHISPER_SERVER_PID=$!
+    trap '[ -n "$FASTER_WHISPER_SERVER_PID" ] && kill "$FASTER_WHISPER_SERVER_PID" 2>/dev/null' EXIT
+
+    echo "Waiting for faster-whisper API to be ready…"
+    local tries=0
+    until curl -sf "http://localhost:${FASTER_WHISPER_PORT}" >/dev/null 2>&1; do
+        if ! kill -0 "$FASTER_WHISPER_SERVER_PID" 2>/dev/null; then
+            echo "Error: faster-whisper server exited unexpectedly."
+            echo "  Log: $_FW_LOG_DIR/faster_whisper_server.log"
+            return 1
+        fi
+        tries=$((tries + 1))
+        if [ "$tries" -ge 120 ]; then
+            echo "Error: faster-whisper API not ready after 120s."
+            echo "  Log: $_FW_LOG_DIR/faster_whisper_server.log"
+            return 1
+        fi
+        sleep 1
+    done
+    echo "✓ faster-whisper server ready on :${FASTER_WHISPER_PORT} (PID $FASTER_WHISPER_SERVER_PID)"
+}

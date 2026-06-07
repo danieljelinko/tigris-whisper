@@ -63,7 +63,7 @@ the same `POST /v1/audio/transcriptions` endpoint on `:4444`, so the Python daem
 |---|---|---|---|
 | macOS (Apple Silicon) | [mlx-whisper](https://github.com/ml-explore/mlx-examples/tree/main/whisper) (installs as wheels) | `mlx-community/whisper-large-v3-turbo-q4` | MLX (Apple GPU) |
 | Linux + NVIDIA GPU | Docker `whisper-assistant` | faster-whisper `turbo` | CUDA |
-| Linux, no GPU | [whisper.cpp](https://github.com/ggml-org/whisper.cpp) server (CPU build) | `ggml-large-v3-turbo-q5_0` | CPU |
+| Linux, no GPU | [faster-whisper](https://github.com/SYSTRAN/faster-whisper) (CTranslate2, Python wheels) | `small` (selectable at install) | CPU int8 |
 
 **macOS** — no Homebrew or compiler needed; the model downloads on first use:
 ```bash
@@ -123,18 +123,32 @@ Change the installed model later without editing files:
 ./scripts/change_mlx_model.sh mlx-community/whisper-small-mlx-q4 --restart
 ```
 
-**Linux no-GPU setup:**
+**Linux no-GPU setup** (faster-whisper is now the default — no build step):
 ```bash
-./scripts/101_install_whispercpp.sh   # builds whisper-server CPU-only + downloads model
+./install.sh   # installs faster-whisper wheels + prompts for model + pre-downloads it
+./run.sh
+```
+
+Optional whisper.cpp CPU fallback (requires cmake build):
+```bash
+./scripts/101_install_whispercpp.sh
 WHISPER_BACKEND=whispercpp_cpu ./run.sh
 ```
 
 **Override / force backend:**
 ```bash
-WHISPER_BACKEND=mlx ./run.sh            # force mlx-whisper (macOS)
-WHISPER_BACKEND=whispercpp_cpu ./run.sh # force whisper.cpp CPU
-WHISPER_BACKEND=docker_cuda ./run.sh    # force Docker CUDA
-./run.sh --print-backend                # print selected backend and exit (no daemon)
+WHISPER_BACKEND=mlx ./run.sh              # force mlx-whisper (macOS)
+WHISPER_BACKEND=faster_whisper ./run.sh   # force faster-whisper CPU
+WHISPER_BACKEND=whispercpp_cpu ./run.sh   # force whisper.cpp CPU
+WHISPER_BACKEND=docker_cuda ./run.sh      # force Docker CUDA
+./run.sh --print-backend                  # print selected backend and exit (no daemon)
+```
+
+**Change Linux model after install:**
+```bash
+./scripts/change_faster_whisper_model.sh
+./scripts/change_faster_whisper_model.sh fast --restart
+./scripts/change_faster_whisper_model.sh small --restart
 ```
 
 ---
