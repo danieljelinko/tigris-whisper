@@ -125,8 +125,8 @@ elif [ "$OS" = "Linux" ]; then
     fi
 
     if [ -n "$PKG_INSTALL" ]; then
-        echo "Installing system packages (sox, libnotify, xdotool/wtype, curl)…"
-        $PKG_INSTALL sox libnotify-bin curl
+        echo "Installing system packages (sox, libnotify, xdotool/wtype, curl, python3-dev)…"
+        $PKG_INSTALL sox libnotify-bin curl python3-dev
 
         # Display-server tools
         if [ -n "${WAYLAND_DISPLAY:-}" ]; then
