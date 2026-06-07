@@ -96,7 +96,9 @@ git_works() {
     local gp
     gp="$(command -v git 2>/dev/null || true)"
     [ -n "$gp" ] || return 1              # no git binary at all
-    [ "$gp" = "/usr/bin/git" ] && return 1  # macOS stub — do not invoke
+    # /usr/bin/git on macOS is a stub that triggers the Xcode CLT install dialog;
+    # on Linux it is the real binary, so only skip it on Darwin.
+    [ "$OS" = "Darwin" ] && [ "$gp" = "/usr/bin/git" ] && return 1
     git --version >/dev/null 2>&1         # real git: verify it actually works
 }
 
