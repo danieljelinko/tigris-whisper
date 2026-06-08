@@ -25,9 +25,15 @@ ensure_faster_whisper_backend() {
     local model="${FASTER_WHISPER_MODEL:-small}"
     mkdir -p "$_FW_LOG_DIR"
 
+    # Pre-download the model so the server doesn't stall on first load.
+    if [ -f "$_FW_SCRIPT_DIR/scripts/download_faster_whisper_model.py" ]; then
+        FASTER_WHISPER_MODEL="$model" \
+            uv run python "$_FW_SCRIPT_DIR/scripts/download_faster_whisper_model.py" || true
+    fi
+
     echo "Starting faster-whisper server (model: $model)…"
     FASTER_WHISPER_MODEL="$model" \
-        uv run "$_FW_SCRIPT_DIR/src/faster_whisper_server.py" \
+        uv run python -u "$_FW_SCRIPT_DIR/src/faster_whisper_server.py" \
         >"$_FW_LOG_DIR/faster_whisper_server.log" 2>&1 &
     FASTER_WHISPER_SERVER_PID=$!
     trap '[ -n "$FASTER_WHISPER_SERVER_PID" ] && kill "$FASTER_WHISPER_SERVER_PID" 2>/dev/null' EXIT
