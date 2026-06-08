@@ -144,12 +144,14 @@ WHISPER_BACKEND=docker_cuda ./run.sh      # force Docker CUDA
 ./run.sh --print-backend                  # print selected backend and exit (no daemon)
 ```
 
-**Change Linux model after install:**
+**Change model after install (all platforms):**
 ```bash
-./scripts/change_faster_whisper_model.sh
-./scripts/change_faster_whisper_model.sh fast --restart
-./scripts/change_faster_whisper_model.sh small --restart
+./scripts/change_model.sh                    # interactive picker
+./scripts/change_model.sh fast               # profile shorthand
+./scripts/change_model.sh fast --restart     # switch and restart daemon
 ```
+
+Profiles work on all backends (`balanced`, `fast`, `very-fast`, `best-accuracy`).
 
 ---
 
