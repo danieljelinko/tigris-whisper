@@ -9,8 +9,17 @@ _FW_LOG_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/tigris-whisper"
 FASTER_WHISPER_SERVER_PID=""
 
 ensure_faster_whisper_backend() {
+    local wanted_model="${FASTER_WHISPER_MODEL:-small}"
     if curl -sf "http://localhost:${FASTER_WHISPER_PORT}" >/dev/null 2>&1; then
-        echo "✓ faster-whisper server already responding on :${FASTER_WHISPER_PORT}"; return 0
+        local running_model
+        running_model="$(curl -sf "http://localhost:${FASTER_WHISPER_PORT}" \
+            | python3 -c "import sys,json; print(json.load(sys.stdin).get('model',''))" 2>/dev/null || true)"
+        if [ "$running_model" = "$wanted_model" ]; then
+            echo "✓ faster-whisper server already responding on :${FASTER_WHISPER_PORT} (model: $running_model)"; return 0
+        fi
+        echo "Model changed ($running_model → $wanted_model); restarting server…"
+        pkill -f "faster_whisper_server.py" 2>/dev/null || true
+        sleep 1
     fi
 
     local model="${FASTER_WHISPER_MODEL:-small}"

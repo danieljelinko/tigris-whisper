@@ -77,29 +77,33 @@ fw_profile_for_model() {
 # ─── Interactive picker ───────────────────────────────────────────────────────
 
 choose_mlx() {
-    local reply=""
-    echo "Choose model (macOS / mlx-whisper):"
-    echo "  All choices are multilingual Whisper models."
-    echo ""
-    echo "  1. Balanced (default): large-v3-turbo-q4  — good accuracy, quantized"
-    echo "  2. Fast:               small-mlx-q4        — lower latency"
-    echo "  3. Very fast:          base-mlx-q4         — fastest, less accurate"
-    echo "  4. Best accuracy:      large-v3-turbo      — larger download/RAM"
-    printf "Model choice [1]: "
+    # All display output goes to /dev/tty so $() capture gets only the model id.
+    local reply="" tty=/dev/tty
+    [ -r /dev/tty ] || tty=/dev/stderr
+    echo "Choose model (macOS / mlx-whisper):" >"$tty"
+    echo "  All choices are multilingual Whisper models." >"$tty"
+    echo "" >"$tty"
+    echo "  1. Balanced (default): large-v3-turbo-q4  — good accuracy, quantized" >"$tty"
+    echo "  2. Fast:               small-mlx-q4        — lower latency" >"$tty"
+    echo "  3. Very fast:          base-mlx-q4         — fastest, less accurate" >"$tty"
+    echo "  4. Best accuracy:      large-v3-turbo      — larger download/RAM" >"$tty"
+    printf "Model choice [1]: " >"$tty"
     if [ -r /dev/tty ]; then read -r reply < /dev/tty || reply=""; else read -r reply || reply=""; fi
     mlx_model_for_profile "${reply:-1}"
 }
 
 choose_faster_whisper() {
-    local reply=""
-    echo "Choose model (Linux / faster-whisper CPU):"
-    echo "  All choices are multilingual Whisper models."
-    echo ""
-    echo "  1. Balanced (default): small          — ~490 MB, good accuracy"
-    echo "  2. Fast:               base            — ~145 MB, lower latency"
-    echo "  3. Very fast:          tiny            — ~75 MB, fastest"
-    echo "  4. Best accuracy:      large-v3-turbo  — ~1.6 GB, slower on CPU"
-    printf "Model choice [1]: "
+    # All display output goes to /dev/tty so $() capture gets only the model id.
+    local reply="" tty=/dev/tty
+    [ -r /dev/tty ] || tty=/dev/stderr
+    echo "Choose model (Linux / faster-whisper CPU):" >"$tty"
+    echo "  All choices are multilingual Whisper models." >"$tty"
+    echo "" >"$tty"
+    echo "  1. Balanced (default): small          — ~490 MB, good accuracy" >"$tty"
+    echo "  2. Fast:               base            — ~145 MB, lower latency" >"$tty"
+    echo "  3. Very fast:          tiny            — ~75 MB, fastest" >"$tty"
+    echo "  4. Best accuracy:      large-v3-turbo  — ~1.6 GB, slower on CPU" >"$tty"
+    printf "Model choice [1]: " >"$tty"
     if [ -r /dev/tty ]; then read -r reply < /dev/tty || reply=""; else read -r reply || reply=""; fi
     fw_model_for_profile "${reply:-1}"
 }
