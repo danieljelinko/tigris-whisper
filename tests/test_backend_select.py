@@ -29,13 +29,13 @@ def test_select_backend_is_docker_cuda_when_linux_with_nvidia_gpu():
     assert result == "docker_cuda"
 
 
-def test_select_backend_is_whispercpp_cpu_when_linux_without_gpu():
+def test_select_backend_is_faster_whisper_when_linux_without_gpu():
     # Given a Linux host with no usable GPU
     # When we select a backend
     result = select_backend("Linux", has_nvidia_gpu=False)
 
-    # Then it falls back to the CPU whisper.cpp backend
-    assert result == "whispercpp_cpu"
+    # Then it uses faster-whisper (the new default Linux CPU backend)
+    assert result == "faster_whisper"
 
 
 def test_select_backend_honors_override_over_detection():

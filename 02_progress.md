@@ -23,6 +23,7 @@
 
 ## Done
 | Date | Task | Verified by |
+| 2026-06-08 | Benchmark harness — `benchmark/` dir, eval/client/hardware/backend_launch/run_benchmark/run_suite/readme_snippet; TDD tests (26 green); EN/FR/HU reference texts; manifest.toml; README BENCH markers; add-benchmark-language skill | `uv run python -m pytest` 26/26 |
 |---|---|---|
 | 2026-06-07 | Phase 3.1–3.5: faster-whisper Linux CPU backend | `src/faster_whisper_server.py`, `scripts/lib/backend_faster_whisper.sh`, `scripts/change_faster_whisper_model.sh`; `backend_select` routes Linux no-GPU → `faster_whisper`; install.sh adds model picker + pre-download |
 | 2026-06-07 | Fix Linux bootstrap: git at /usr/bin/git now correctly used on Linux (was rejected as macOS stub) | bootstrap.sh `git_works()` now only skips /usr/bin/git on Darwin |

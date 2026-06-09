@@ -1,0 +1,27 @@
+# Benchmark test-set manifest.
+# Each [[entry]] defines one (language, audio, reference) triple.
+# Add rows here to benchmark additional languages — or use add-benchmark-language skill.
+#
+# Fields:
+#   language     = Whisper language code (ISO 639-1)
+#   audio        = path to WAV recording (relative to repo root)
+#   reference    = path to ground-truth transcript text file (relative to repo root)
+#   label        = human-readable name shown in reports
+
+[[entry]]
+language  = "en"
+audio     = "benchmark/data/audio/en.wav"
+reference = "benchmark/data/refs/en.txt"
+label     = "English"
+
+[[entry]]
+language  = "fr"
+audio     = "benchmark/data/audio/fr.wav"
+reference = "benchmark/data/refs/fr.txt"
+label     = "French"
+
+[[entry]]
+language  = "hu"
+audio     = "benchmark/data/audio/hu.wav"
+reference = "benchmark/data/refs/hu.txt"
+label     = "Hungarian"

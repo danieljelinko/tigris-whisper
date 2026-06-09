@@ -54,6 +54,19 @@ For a more detailed walkthrough see [`docs/mac_setup.md`](docs/mac_setup.md).
 
 ---
 
+## Benchmark results
+
+Real-world transcription performance across backends and languages — measured by the
+[benchmark harness](benchmark/) against human recordings of the same reference text
+([EN](benchmark/data/refs/en.txt) · [FR](benchmark/data/refs/fr.txt) · [HU](benchmark/data/refs/hu.txt)).
+RTF < 1.0 means faster than real-time. Lower WER is better; higher F1 is better.
+
+<!-- BENCH:START -->
+_No benchmark results yet. Run `uv run python benchmark/run_suite.py` to generate them._
+<!-- BENCH:END -->
+
+---
+
 ## Backends by platform
 
 `run.sh` auto-detects your host and starts the right transcription backend. All backends expose
