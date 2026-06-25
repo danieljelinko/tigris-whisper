@@ -139,8 +139,8 @@ Change the installed model later without editing files:
 `change_model.sh` is **catalog-driven**: picking a model also selects the right
 backend for your machine (it writes `WHISPER_BACKEND` + the model into
 `tigris-whisper.env`), so switching between model families is seamless — the
-daemon and hotkey are unchanged. `change_mlx_model.sh` /
-`change_faster_whisper_model.sh` remain as compatibility wrappers.
+daemon and hotkey are unchanged. It shows only the models runnable on your host,
+so it is the single switcher for every backend.
 
 ### Available models & licenses
 

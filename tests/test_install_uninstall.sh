@@ -146,7 +146,7 @@ grep -q "control_mac_app.sh status|stop|restart|logs" "$install_out" && \
     ok "install.sh prints app control commands" || \
     fail "install.sh prints app control commands"
 
-grep -q "Change model:      ./scripts/change_mlx_model.sh" "$install_out" && \
+grep -q "Change model:      ./scripts/change_model.sh" "$install_out" && \
     ok "install.sh prints model switcher command" || \
     fail "install.sh prints model switcher command"
 
@@ -256,7 +256,7 @@ grep -q "control_mac_app.sh status|stop|restart|logs" "$bootstrap_out" && \
     ok "bootstrap.sh prints app control commands" || \
     fail "bootstrap.sh prints app control commands"
 
-grep -q "change_mlx_model.sh --restart" "$bootstrap_out" && \
+grep -q "change_model.sh --restart" "$bootstrap_out" && \
     ok "bootstrap.sh prints model switcher command" || \
     fail "bootstrap.sh prints model switcher command"
 
@@ -264,38 +264,37 @@ grep -q "4. Confirm Microphone is enabled:" "$bootstrap_out" && \
     ok "bootstrap.sh gives explicit Microphone permission step" || \
     fail "bootstrap.sh gives explicit Microphone permission step"
 
-# ─── change_mlx_model.sh: updates model config without reinstall ─────────────
+# ─── change_model.sh: updates model config without reinstall ─────────────────
 
 MODEL_TEST_DIR="$TMP/model-change"
 mkdir -p "$MODEL_TEST_DIR/scripts" "$MODEL_TEST_DIR/src"
-# The compat wrapper exec's change_model.sh, which resolves models via the
-# stdlib-only model_catalog. Copy all three so the switcher runs in isolation.
-cp "$SCRIPT_DIR/scripts/change_mlx_model.sh" "$MODEL_TEST_DIR/scripts/change_mlx_model.sh"
-cp "$SCRIPT_DIR/scripts/change_model.sh"     "$MODEL_TEST_DIR/scripts/change_model.sh"
+# change_model.sh resolves models via the stdlib-only model_catalog. Copy both so
+# the switcher runs in isolation.
+cp "$SCRIPT_DIR/scripts/change_model.sh" "$MODEL_TEST_DIR/scripts/change_model.sh"
 cp "$SCRIPT_DIR/src/model_catalog.py" "$SCRIPT_DIR/src/backend_select.py" "$MODEL_TEST_DIR/src/"
 
 model_out="$TMP/model-change.out"
-if bash "$MODEL_TEST_DIR/scripts/change_mlx_model.sh" fast >"$model_out" 2>&1; then
-    ok "change_mlx_model.sh accepts profile argument"
+if bash "$MODEL_TEST_DIR/scripts/change_model.sh" fast >"$model_out" 2>&1; then
+    ok "change_model.sh accepts profile argument"
 else
     cat "$model_out"
-    fail "change_mlx_model.sh accepts profile argument"
+    fail "change_model.sh accepts profile argument"
 fi
 
 grep -q "WHISPER_MLX_MODEL=mlx-community/whisper-small-mlx-q4" "$MODEL_TEST_DIR/tigris-whisper.env" && \
-    ok "change_mlx_model.sh writes profile model" || \
-    fail "change_mlx_model.sh writes profile model"
+    ok "change_model.sh writes profile model" || \
+    fail "change_model.sh writes profile model"
 
-if bash "$MODEL_TEST_DIR/scripts/change_mlx_model.sh" mlx-community/custom-whisper >"$model_out" 2>&1; then
-    ok "change_mlx_model.sh accepts custom model id"
+if bash "$MODEL_TEST_DIR/scripts/change_model.sh" mlx-community/custom-whisper >"$model_out" 2>&1; then
+    ok "change_model.sh accepts custom model id"
 else
     cat "$model_out"
-    fail "change_mlx_model.sh accepts custom model id"
+    fail "change_model.sh accepts custom model id"
 fi
 
 grep -q "WHISPER_MLX_MODEL=mlx-community/custom-whisper" "$MODEL_TEST_DIR/tigris-whisper.env" && \
-    ok "change_mlx_model.sh writes custom model id" || \
-    fail "change_mlx_model.sh writes custom model id"
+    ok "change_model.sh writes custom model id" || \
+    fail "change_model.sh writes custom model id"
 
 # ─── uninstall.sh: removes generated app/state/logs/model/install dir safely ──
 

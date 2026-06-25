@@ -263,7 +263,7 @@ if [ "$OS" = "Darwin" ]; then
     echo "   • Model config: $INSTALL_DIR/tigris-whisper.env"
     echo "   • Install logs: ~/Library/Logs/tigris-whisper/bootstrap-latest.log"
     echo "                   ~/Library/Logs/tigris-whisper/install-latest.log"
-    echo "   • To change model later: cd $INSTALL_DIR && ./scripts/change_mlx_model.sh --restart"
+    echo "   • To change model later: cd $INSTALL_DIR && ./scripts/change_model.sh --restart"
     echo "   • To check/stop/restart/logs: cd $INSTALL_DIR && ./scripts/control_mac_app.sh status|stop|restart|logs"
     echo "   • Manual/developer mode is: cd $INSTALL_DIR && ./run.sh"
     echo "   • If you use manual mode, grant permissions to your terminal app instead."

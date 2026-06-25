@@ -106,7 +106,7 @@ if [ "$OS" = "Darwin" ]; then
     echo "Reveal in Finder:  open -R ~/Applications/tigris-whisper.app"
     echo "Manual/dev launch: ./run.sh"
     echo "App controls:      ./scripts/control_mac_app.sh status|stop|restart|logs"
-    echo "Change model:      ./scripts/change_mlx_model.sh"
+    echo "Change model:      ./scripts/change_model.sh"
     echo "Verify/warm model: ./scripts/test_mac_setup.sh"
     echo "Install log:       ~/Library/Logs/tigris-whisper/install-latest.log"
     echo "Uninstall:     ./uninstall.sh"
@@ -219,7 +219,7 @@ elif [ "$OS" = "Linux" ]; then
     echo ""
     echo "✓ Linux installation complete."
     echo "Run:  ./run.sh"
-    echo "Change model: ./scripts/change_faster_whisper_model.sh"
+    echo "Change model: ./scripts/change_model.sh"
     echo "Uninstall: ./uninstall.sh"
 
 else
