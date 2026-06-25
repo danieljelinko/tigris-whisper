@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-# Smoke test for the macOS tigris-whisper setup (mlx-whisper backend).
+# Smoke test for the macOS tigris-whisper setup — backend-aware.
+# Honours the backend the user selected at install (mlx-whisper for Whisper
+# profiles, mlx_audio for Nemotron/Cohere), reusing the same backend libs that
+# run.sh uses so the warm-up + server bring-up are never duplicated here.
 # Run this after ./install.sh to verify every piece works before you try the
 # daemon for the first time.
 #
@@ -7,9 +10,9 @@
 #   1. Apple Silicon chip (M-series) + macOS version
 #   2. Pixi installed and Python deps synced
 #   3. Flask + daemon dependency imports
-#   4. Model warmup/download with Hugging Face progress
-#   5. End-to-end: start the mlx server, POST a real WAV → text
-#   6. run.sh dispatch resolves to mlx
+#   4. Model warmup/download with Hugging Face progress (selected backend)
+#   5. End-to-end: start the selected backend's server, POST a real WAV → text
+#   6. run.sh dispatch resolves to the selected backend
 #   7. macOS permission reminder (advisory)
 #
 # Usage:
@@ -22,17 +25,33 @@
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SCRIPT_DIR="$REPO_DIR"   # backend libs reference $SCRIPT_DIR as the repo root
 FIXTURE="$REPO_DIR/tests/fixtures/sample_speech.wav"
 PORT=14444   # non-standard port so we don't collide with a running daemon
 PIXI="$(command -v pixi 2>/dev/null || printf '%s/.pixi/bin/pixi' "$HOME")"
 CONFIG_FILE="$REPO_DIR/tigris-whisper.env"
+# Preserve any user-set env overrides over the saved config file.
+USER_WHISPER_BACKEND="${WHISPER_BACKEND:-}"
 USER_WHISPER_MLX_MODEL="${WHISPER_MLX_MODEL:-}"
+USER_WHISPER_MLX_AUDIO_MODEL="${WHISPER_MLX_AUDIO_MODEL:-}"
 if [ -f "$CONFIG_FILE" ]; then
     # shellcheck source=/dev/null
     set -a; source "$CONFIG_FILE"; set +a
 fi
+[ -n "$USER_WHISPER_BACKEND" ] && export WHISPER_BACKEND="$USER_WHISPER_BACKEND"
 [ -n "$USER_WHISPER_MLX_MODEL" ] && export WHISPER_MLX_MODEL="$USER_WHISPER_MLX_MODEL"
-WHISPER_MLX_MODEL="${WHISPER_MLX_MODEL:-mlx-community/whisper-large-v3-turbo-q4}"
+[ -n "$USER_WHISPER_MLX_AUDIO_MODEL" ] && export WHISPER_MLX_AUDIO_MODEL="$USER_WHISPER_MLX_AUDIO_MODEL"
+
+# Resolve the selected backend + its model (default: Whisper on mlx).
+BACKEND="${WHISPER_BACKEND:-mlx}"
+if [ "$BACKEND" = "mlx_audio" ]; then
+    MODEL="${WHISPER_MLX_AUDIO_MODEL:-mlx-community/nemotron-3.5-asr-streaming-0.6b}"
+    SERVER_DESC="mlx-audio (Nemotron/Cohere family)"
+else
+    BACKEND="mlx"
+    MODEL="${WHISPER_MLX_MODEL:-mlx-community/whisper-large-v3-turbo-q4}"
+    SERVER_DESC="mlx-whisper"
+fi
 TRANSCRIPTION_TIMEOUT="${TIGRIS_TRANSCRIPTION_TIMEOUT:-120}"
 
 PASS=0; FAIL=0; WARN=0
@@ -57,10 +76,10 @@ cache_size() {
 }
 
 echo ""
-echo "=== tigris-whisper Mac smoke test (mlx-whisper) ==="
+echo "=== tigris-whisper Mac smoke test ($SERVER_DESC) ==="
 echo "Repo: $REPO_DIR"
-echo "Model: $WHISPER_MLX_MODEL"
-echo "Language scope: multilingual Whisper model"
+echo "Backend: $BACKEND"
+echo "Model: $MODEL"
 cd "$REPO_DIR"
 
 # ─── 1. Hardware ──────────────────────────────────────────────────────────────
@@ -89,50 +108,53 @@ hr; echo "3. Key imports"
     ok "daemon deps import (pynput, requests, sounddevice)" || \
     fail "a daemon dependency failed to import"
 
-# ─── 4. Model warmup/download ────────────────────────────────────────────────
+# ─── 4. Model warmup/download (backend-aware) ────────────────────────────────
 hr; echo "4. Model download / cache warmup"
-echo "   Selected model: $WHISPER_MLX_MODEL"
+echo "   Selected backend: $BACKEND"
+echo "   Selected model: $MODEL"
 echo "   First run downloads from Hugging Face and can take several minutes."
 echo "   Progress bars appear below when files are downloading."
-if HF_HUB_DISABLE_XET="${HF_HUB_DISABLE_XET:-1}" WHISPER_MLX_MODEL="$WHISPER_MLX_MODEL" \
-    "$PIXI" run python scripts/download_mlx_model.py "$WHISPER_MLX_MODEL"; then
+if HF_HUB_DISABLE_XET="${HF_HUB_DISABLE_XET:-1}" WHISPER_BACKEND="$BACKEND" \
+    WHISPER_MLX_MODEL="${WHISPER_MLX_MODEL:-}" WHISPER_MLX_AUDIO_MODEL="${WHISPER_MLX_AUDIO_MODEL:-}" \
+    "$PIXI" run python scripts/download_mlx_model.py "$MODEL"; then
     ok "Model cache ready"
 else
     fail "Model download/cache warmup failed"
 fi
 
-# ─── 5. End-to-end: launch mlx server → transcribe fixture ───────────────────
-hr; echo "5. End-to-end transcription (mlx server + real audio)"
+# ─── 5. End-to-end: launch the selected backend's server → transcribe fixture ─
+hr; echo "5. End-to-end transcription ($SERVER_DESC server + real audio)"
 echo "   This sends a tiny bundled WAV file to the local server."
-echo "   It verifies that mlx-whisper can do a real transcription on this Mac."
-echo "   It can take 30–120 seconds on first run while MLX initializes/compiles."
+echo "   It verifies the selected backend can do a real transcription on this Mac."
+echo "   It can take 30–120 seconds on first run while the model initializes."
 echo "   Skip with: TIGRIS_SKIP_TRANSCRIPTION_TEST=1 ./scripts/test_mac_setup.sh"
-SERVER_PID=""
-cleanup() { [ -n "$SERVER_PID" ] && kill "$SERVER_PID" 2>/dev/null || true; }
-trap cleanup EXIT
 
 if [ "${TIGRIS_SKIP_TRANSCRIPTION_TEST:-0}" = "1" ]; then
     warn "Skipping real transcription because TIGRIS_SKIP_TRANSCRIPTION_TEST=1"
 elif [ ! -f "$FIXTURE" ]; then
     warn "Skipping (fixture not found: $FIXTURE)"
 else
-    LOG="$(mktemp)"
-    HF_HUB_DISABLE_XET="${HF_HUB_DISABLE_XET:-1}" WHISPER_MLX_MODEL="$WHISPER_MLX_MODEL" WHISPER_MLX_PORT="$PORT" "$PIXI" run python src/mlx_whisper_server.py >"$LOG" 2>&1 &
-    SERVER_PID=$!
-
-    echo -n "   Waiting for server (incl. possible model download)"
-    READY=0
-    for _ in $(seq 1 600); do          # up to 10 min for first-time model pull
-        if curl -sf "http://127.0.0.1:$PORT/" >/dev/null 2>&1; then READY=1; break; fi
-        if ! kill -0 "$SERVER_PID" 2>/dev/null; then break; fi
-        echo -n "."; sleep 1
-    done
-    echo ""
-
-    if [ "$READY" = "0" ]; then
-        fail "mlx server did not become ready. Log:"; tail -15 "$LOG"
+    # Reuse the exact backend lib run.sh uses — no duplicated bring-up. The lib
+    # pre-downloads the model in the foreground, starts the server on $PORT, waits
+    # for readiness, and installs its own EXIT trap to stop it.
+    if [ "$BACKEND" = "mlx_audio" ]; then
+        export WHISPER_MLX_AUDIO_PORT="$PORT" WHISPER_MLX_AUDIO_MODEL="$MODEL"
+        LOG="${WHISPERCPP_DIR:-$HOME/.cache/whisper.cpp}/mlx_audio_server.log"
+        # shellcheck source=lib/backend_mlx_audio.sh
+        source "$REPO_DIR/scripts/lib/backend_mlx_audio.sh"
+        ensure_selected_backend() { ensure_mlx_audio_backend; }
     else
-        ok "mlx server ready on :$PORT"
+        export WHISPER_MLX_PORT="$PORT" WHISPER_MLX_MODEL="$MODEL"
+        LOG="${WHISPERCPP_DIR:-$HOME/.cache/whisper.cpp}/mlx_server.log"
+        # shellcheck source=lib/backend_mlx.sh
+        source "$REPO_DIR/scripts/lib/backend_mlx.sh"
+        ensure_selected_backend() { ensure_mlx_backend; }
+    fi
+
+    if ! ensure_selected_backend; then
+        fail "$SERVER_DESC server did not become ready on :$PORT"
+    else
+        ok "$SERVER_DESC server ready on :$PORT"
         RESPONSE_FILE="$(mktemp)"
         CURL_LOG="$(mktemp)"
         echo "   Sending sample audio for transcription..."
@@ -183,11 +205,11 @@ else
     fi
 fi
 
-# ─── 5. Dispatch ──────────────────────────────────────────────────────────────
+# ─── 6. Dispatch ──────────────────────────────────────────────────────────────
 hr; echo "6. run.sh dispatch"
-BACKEND="$(bash run.sh --print-backend 2>/dev/null || echo error)"
-[ "$BACKEND" = "mlx" ] && ok "run.sh --print-backend → mlx" || \
-    fail "run.sh --print-backend → '$BACKEND' (expected mlx)"
+DISPATCH_BACKEND="$(WHISPER_BACKEND="$BACKEND" bash run.sh --print-backend 2>/dev/null || echo error)"
+[ "$DISPATCH_BACKEND" = "$BACKEND" ] && ok "run.sh --print-backend → $BACKEND" || \
+    fail "run.sh --print-backend → '$DISPATCH_BACKEND' (expected $BACKEND)"
 
 # ─── 6. Permissions (advisory) ────────────────────────────────────────────────
 hr; echo "7. macOS permissions (verify manually — cannot be tested automatically)"

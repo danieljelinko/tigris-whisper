@@ -23,7 +23,8 @@ ensure_mlx_audio_backend() {
     echo "  First run downloads from Hugging Face and can take several minutes."
     echo "  Progress bars appear below when files are downloading."
     HF_HUB_DISABLE_XET="${HF_HUB_DISABLE_XET:-1}" \
-        "$PIXI" run python -c "import sys; from mlx_audio.stt import load; load(sys.argv[1])" "$MLXA_MODEL"
+        WHISPER_BACKEND="mlx_audio" WHISPER_MLX_AUDIO_MODEL="$MLXA_MODEL" \
+        "$PIXI" run python "$SCRIPT_DIR/scripts/download_mlx_model.py" "$MLXA_MODEL"
 
     echo "Starting mlx-audio server…"
     HF_HUB_DISABLE_XET="${HF_HUB_DISABLE_XET:-1}" \

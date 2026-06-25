@@ -1,7 +1,7 @@
 # 02 · Progress
 
 ## In flight
-- New-models track Phase 1 (Mac MLX) **landed on this branch, code-complete & green**; on-device verify pending: pick Nemotron/Omnilingual/Cohere on the Air → `./run.sh` brings up `mlx_audio` → hotkey→paste; confirm exact `mlx-community/*` repo ids resolve/download (placeholders may need adjusting).
+- New-models Mac picker/warm-up **landed & green on Linux** (pytest 65, install/uninstall 59, dispatch 6). Built on a Linux box, so **two on-device steps remain on the Air**: (1) step-1 `mlx_audio.stt.load(id).generate(wav).text` for Nemotron + Cohere (Hub-existence verified, load/transcribe not); (2) fresh bootstrap → pick a new model → warm-up downloads with visible progress → real hotkey→transcribe→paste. Omnilingual is intentionally not offered on Mac (no MLX build on the Hub yet).
 - Phase 3.6: Linux end-to-end test — bootstrap → faster-whisper model download → `./run.sh` → hotkey→paste on Feynman (Linux, no GPU).
 - Phase 4.4: manual GUI test — launch **tigris-whisper.app** from Finder or
   `open`, confirm the startup Microphone prompt appears, grant Accessibility,
@@ -28,6 +28,7 @@
 
 ## Done
 | Date | Task | Verified by |
+| 2026-06-25 | Mac catalog picker + backend-aware warm-up: `bootstrap.sh choose_mac_model` now catalog-driven (writes `WHISPER_BACKEND`+model env+`TIGRIS_MODEL_PROFILE`; Whisper balanced default; `WHISPER_MLX_MODEL`/`WHISPER_MODEL_KEY` skip seams; skips macOS CLT-stub python3). `download_mlx_model.py` backend-aware (mlx→snapshot, mlx_audio→`load`); `backend_mlx_audio.sh` + `test_mac_setup.sh` route through it / reuse `backend_mlx*.sh`. Step-1 catalog ids Hub-verified: Cohere→`-mlx-8bit`, Omnilingual `darwin`→`None` (no MLX build), Nemotron kept. **On-device load/transcribe + hotkey→paste still pending on the Air.** | `uv run pytest` 65/65; `test_install_uninstall.sh` 59/0; `test_run_dispatch.sh` 6/0; catalog ids checked vs live HF Hub |
 | 2026-06-25 | New-models Phase 1 (Mac MLX): model catalog (`src/model_catalog.py`) maps model-key→(backend,model,env) per platform; new `mlx_audio` backend (`src/mlx_audio_server.py` + `scripts/lib/backend_mlx_audio.sh` + run.sh case) serves Nemotron 3.5 / Omnilingual / Cohere via mlx-audio; `change_model.sh` now catalog-driven so picking a model flips `WHISPER_BACKEND` seamlessly; registered in benchmark `backend_launch.py`; `pixi.toml` adds mlx-audio; uninstall cleans new caches. Fixed pre-existing `change_model`/dispatch test breakage. | `uv run pytest` 58/58; `test_install_uninstall.sh` 52/0; `test_run_dispatch.sh` 6/0 |
 | 2026-06-25 | Floor `numba >=0.60` in pixi.toml — fixes `pixi install` backtracking to numba 0.53.1 (unbuildable sdist on py3.12) on Evi's Mac. Pushed to main. | Cross-platform resolve on Linux (`uv pip compile --python-platform aarch64-apple-darwin --python-version 3.12` → numba 0.65.1 + numpy 2.4.6, both wheel-backed). **Pending on-device confirm: Evi re-runs bootstrap.** |
 | 2026-06-08 | Benchmark harness — `benchmark/` dir, eval/client/hardware/backend_launch/run_benchmark/run_suite/readme_snippet; TDD tests (26 green); EN/FR/HU reference texts; manifest.toml; README BENCH markers; add-benchmark-language skill | `uv run python -m pytest` 26/26 |

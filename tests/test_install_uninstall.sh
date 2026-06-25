@@ -165,7 +165,7 @@ grep -q "status" "$control_out" && grep -q "restart" "$control_out" && \
 # ─── bootstrap.sh: runs Mac smoke test/model warmup after install ─────────────
 
 BOOTSTRAP_DIR="$TMP/bootstrap-install"
-mkdir -p "$BOOTSTRAP_DIR/.git" "$BOOTSTRAP_DIR/scripts"
+mkdir -p "$BOOTSTRAP_DIR/.git" "$BOOTSTRAP_DIR/scripts" "$BOOTSTRAP_DIR/src"
 cat > "$BOOTSTRAP_DIR/install.sh" <<'EOF'
 #!/usr/bin/env bash
 echo "stub install ran"
@@ -177,6 +177,9 @@ echo "stub smoke test ran"
 touch "$HOME/bootstrap-smoke-test-ran"
 EOF
 chmod +x "$BOOTSTRAP_DIR/scripts/test_mac_setup.sh"
+# The fake git no-ops the pull, so src/ is not fetched here. The catalog-driven
+# Mac picker resolves models via real python3, so copy the stdlib-only catalog in.
+cp "$SCRIPT_DIR/src/model_catalog.py" "$SCRIPT_DIR/src/backend_select.py" "$BOOTSTRAP_DIR/src/"
 
 bootstrap_out="$TMP/bootstrap.out"
 if WHISPER_INSTALL_DIR="$BOOTSTRAP_DIR" bash "$SCRIPT_DIR/bootstrap.sh" >"$bootstrap_out" 2>&1; then
@@ -213,6 +216,10 @@ grep -q "Selected model: mlx-community/whisper-large-v3-turbo-q4" "$bootstrap_ou
 grep -q "WHISPER_MLX_MODEL=mlx-community/whisper-large-v3-turbo-q4" "$BOOTSTRAP_DIR/tigris-whisper.env" && \
     ok "bootstrap.sh model config contains default model" || \
     fail "bootstrap.sh model config contains default model"
+
+grep -q "WHISPER_BACKEND=mlx" "$BOOTSTRAP_DIR/tigris-whisper.env" && \
+    ok "bootstrap.sh default writes WHISPER_BACKEND=mlx" || \
+    fail "bootstrap.sh default writes WHISPER_BACKEND=mlx"
 
 grep -q "can take several minutes" "$bootstrap_out" && \
     ok "bootstrap.sh warns model download can take several minutes" || \
@@ -264,6 +271,35 @@ grep -q "4. Confirm Microphone is enabled:" "$bootstrap_out" && \
     ok "bootstrap.sh gives explicit Microphone permission step" || \
     fail "bootstrap.sh gives explicit Microphone permission step"
 
+# ─── bootstrap.sh: Mac picker can select a new-model key (mlx_audio backend) ──
+
+BOOTSTRAP_DIR2="$TMP/bootstrap-newmodel"
+mkdir -p "$BOOTSTRAP_DIR2/.git" "$BOOTSTRAP_DIR2/scripts" "$BOOTSTRAP_DIR2/src"
+cp "$BOOTSTRAP_DIR/install.sh" "$BOOTSTRAP_DIR2/install.sh"
+cp "$BOOTSTRAP_DIR/scripts/test_mac_setup.sh" "$BOOTSTRAP_DIR2/scripts/test_mac_setup.sh"
+cp "$SCRIPT_DIR/src/model_catalog.py" "$SCRIPT_DIR/src/backend_select.py" "$BOOTSTRAP_DIR2/src/"
+
+newmodel_out="$TMP/bootstrap-newmodel.out"
+if WHISPER_INSTALL_DIR="$BOOTSTRAP_DIR2" WHISPER_MODEL_KEY="nemotron-3.5-0.6b" \
+   TIGRIS_SKIP_SMOKE_TEST=1 bash "$SCRIPT_DIR/bootstrap.sh" >"$newmodel_out" 2>&1; then
+    ok "bootstrap.sh fake-mac new-model picker exits successfully"
+else
+    cat "$newmodel_out"
+    fail "bootstrap.sh fake-mac new-model picker exits successfully"
+fi
+
+grep -q "WHISPER_BACKEND=mlx_audio" "$BOOTSTRAP_DIR2/tigris-whisper.env" && \
+    ok "bootstrap.sh new-model picker writes WHISPER_BACKEND=mlx_audio" || \
+    fail "bootstrap.sh new-model picker writes WHISPER_BACKEND=mlx_audio"
+
+grep -q "WHISPER_MLX_AUDIO_MODEL=mlx-community/nemotron-3.5-asr-streaming-0.6b" "$BOOTSTRAP_DIR2/tigris-whisper.env" && \
+    ok "bootstrap.sh new-model picker writes resolved mlx_audio model" || \
+    fail "bootstrap.sh new-model picker writes resolved mlx_audio model"
+
+grep -q "TIGRIS_MODEL_PROFILE=nemotron-3.5-0.6b" "$BOOTSTRAP_DIR2/tigris-whisper.env" && \
+    ok "bootstrap.sh new-model picker records the model profile/key" || \
+    fail "bootstrap.sh new-model picker records the model profile/key"
+
 # ─── change_model.sh: updates model config without reinstall ─────────────────
 
 MODEL_TEST_DIR="$TMP/model-change"
@@ -295,6 +331,18 @@ fi
 grep -q "WHISPER_MLX_MODEL=mlx-community/custom-whisper" "$MODEL_TEST_DIR/tigris-whisper.env" && \
     ok "change_model.sh writes custom model id" || \
     fail "change_model.sh writes custom model id"
+
+if bash "$MODEL_TEST_DIR/scripts/change_model.sh" nemotron-3.5-0.6b >"$model_out" 2>&1; then
+    ok "change_model.sh accepts a new-family model key"
+else
+    cat "$model_out"
+    fail "change_model.sh accepts a new-family model key"
+fi
+
+grep -q "WHISPER_BACKEND=mlx_audio" "$MODEL_TEST_DIR/tigris-whisper.env" && \
+grep -q "WHISPER_MLX_AUDIO_MODEL=mlx-community/nemotron-3.5-asr-streaming-0.6b" "$MODEL_TEST_DIR/tigris-whisper.env" && \
+    ok "change_model.sh flips backend to mlx_audio for a new-family model" || \
+    fail "change_model.sh flips backend to mlx_audio for a new-family model"
 
 # ─── uninstall.sh: removes generated app/state/logs/model/install dir safely ──
 

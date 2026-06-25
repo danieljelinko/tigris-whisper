@@ -154,7 +154,7 @@ if [ "$REMOVE_MODELS" -eq 1 ]; then
         mlx-community/nemotron-3.5-asr-streaming-0.6b \
         mlx-community/omniASR-LLM-300M mlx-community/omniASR-LLM-1B \
         mlx-community/omniASR-LLM-3B mlx-community/omniASR-LLM-7B \
-        mlx-community/cohere-transcribe-03-2026; do
+        mlx-community/cohere-transcribe-03-2026-mlx-8bit; do
         remove_path "$(hf_cache_dir_for_model "$m")"
     done
 else

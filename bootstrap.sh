@@ -148,46 +148,92 @@ fetch_repo() {
 fetch_repo
 
 # ─── Choose macOS model ───────────────────────────────────────────────────────
+# Catalog-driven: a model choice can imply a *different backend* than Whisper
+# (Nemotron/Cohere run on mlx_audio, not mlx-whisper), so the picker resolves the
+# chosen key through src/model_catalog.py and writes WHISPER_BACKEND + the
+# backend's model env var + TIGRIS_MODEL_PROFILE. run.sh re-derives the backend on
+# launch. Same single source of truth used by scripts/change_model.sh.
+
+# Find a python3 that won't trigger the macOS Xcode-CLT stub dialog. /usr/bin/python3
+# on a CLT-less Mac is a stub (like /usr/bin/git); running it pops the install dialog,
+# which the tarball path exists to avoid. Skip it; the catalog is stdlib-only.
+resolve_picker_python() {
+    local p pp
+    for p in python3 python; do
+        pp="$(command -v "$p" 2>/dev/null || true)"
+        [ -n "$pp" ] || continue
+        [ "$OS" = "Darwin" ] && [ "$pp" = "/usr/bin/python3" ] && continue
+        printf '%s' "$pp"; return 0
+    done
+    return 1
+}
+
 choose_mac_model() {
     [ "$OS" = "Darwin" ] || return 0
 
-    local model profile reply
+    local catalog_py="$INSTALL_DIR/src/model_catalog.py"
+    local known="mlx,mlx_audio"
+    local PY profile backend env_var model key reply
+    PY="$(resolve_picker_python || true)"
+
+    # Can we run the catalog here? (python available + catalog present + it answers)
+    local use_catalog=0
+    if [ -n "$PY" ] && [ -f "$catalog_py" ] && \
+       "$PY" "$catalog_py" list --system Darwin --known-backends "$known" >/dev/null 2>&1; then
+        use_catalog=1
+    fi
+
     if [ -n "${WHISPER_MLX_MODEL:-}" ]; then
-        model="$WHISPER_MLX_MODEL"
-        profile="custom-env"
-    elif [ -r /dev/tty ]; then
-        echo "Choose the local Whisper model for this Mac:"
-        echo "  All choices below are multilingual Whisper models, not English-only models."
-        echo "  Language list: https://github.com/openai/whisper/blob/main/whisper/tokenizer.py"
-        echo ""
-        echo "  1. Balanced (recommended): large-v3-turbo-q4 — multilingual, good accuracy, quantized"
-        echo "  2. Fast: small-mlx-q4 — multilingual, lower latency, less accurate"
-        echo "  3. Very fast: base-mlx-q4 — multilingual, shortest dictation, noticeably less accurate"
-        echo "  4. Best accuracy: large-v3-turbo — multilingual, larger download/RAM"
-        printf "Model choice [1]: "
-        read -r reply < /dev/tty || reply=""
-        case "${reply:-1}" in
-            1) profile="balanced"; model="mlx-community/whisper-large-v3-turbo-q4" ;;
-            2) profile="fast-small"; model="mlx-community/whisper-small-mlx-q4" ;;
-            3) profile="very-fast-base"; model="mlx-community/whisper-base-mlx-q4" ;;
-            4) profile="best-accuracy"; model="mlx-community/whisper-large-v3-turbo" ;;
-            *) profile="balanced"; model="mlx-community/whisper-large-v3-turbo-q4" ;;
-        esac
+        # Env-skip shortcut: a raw mlx-whisper repo id forces the mlx backend.
+        profile="custom-env"; backend="mlx"; env_var="WHISPER_MLX_MODEL"; model="$WHISPER_MLX_MODEL"
+    elif [ "$use_catalog" = "1" ]; then
+        # Determine the chosen catalog key: env seam, then interactive menu, then default.
+        if [ -n "${WHISPER_MODEL_KEY:-}" ]; then
+            key="$WHISPER_MODEL_KEY"
+        elif [ -r /dev/tty ]; then
+            echo "Choose the local transcription model for this Mac:"
+            echo "  Whisper profiles are multilingual; new families list their own license/langs."
+            echo "  Whisper language list: https://github.com/openai/whisper/blob/main/whisper/tokenizer.py"
+            echo ""
+            local keys=() i=0 k label lic langs
+            while IFS=$'\t' read -r k label lic langs; do
+                keys+=("$k"); i=$((i + 1))
+                printf '  %2d. %-38s %-16s %s\n' "$i" "$label" "[$lic]" "$langs"
+            done < <("$PY" "$catalog_py" labels --system Darwin --known-backends "$known")
+            echo ""
+            printf "Model choice [1]: "
+            read -r reply < /dev/tty || reply=""
+            reply="${reply:-1}"
+            key="${keys[$((reply - 1))]:-${keys[0]}}"
+        else
+            key="balanced"   # non-interactive: safe Whisper default, no regression
+        fi
+        # Resolve key → backend, env var, model (single source of truth).
+        local resolved
+        resolved="$("$PY" "$catalog_py" resolve "$key" --system Darwin)"
+        backend="$(printf '%s' "$resolved" | cut -f1)"
+        env_var="$(printf '%s' "$resolved" | cut -f2)"
+        model="$(printf '%s' "$resolved" | cut -f3)"
+        profile="$key"
     else
-        profile="balanced"
+        # No usable python3 yet (e.g. CLT-less Mac pre-install): static Whisper default.
+        profile="balanced"; backend="mlx"; env_var="WHISPER_MLX_MODEL"
         model="mlx-community/whisper-large-v3-turbo-q4"
     fi
 
     {
-        echo "# Generated by bootstrap.sh. Edit this file to change the macOS MLX model."
+        echo "# Generated by bootstrap.sh. Re-pick later with: ./scripts/change_model.sh"
         printf 'export TIGRIS_MODEL_PROFILE=%q\n' "$profile"
-        printf 'export WHISPER_MLX_MODEL=%q\n' "$model"
+        printf 'export WHISPER_BACKEND=%q\n' "$backend"
+        printf 'export %s=%q\n' "$env_var" "$model"
     } > "$INSTALL_DIR/tigris-whisper.env"
     export TIGRIS_MODEL_PROFILE="$profile"
-    export WHISPER_MLX_MODEL="$model"
+    export WHISPER_BACKEND="$backend"
+    export "$env_var=$model"
 
     echo ""
-    echo "Selected model: $WHISPER_MLX_MODEL"
+    echo "Selected model: $model"
+    echo "Backend: $backend"
     echo "Saved model config: $INSTALL_DIR/tigris-whisper.env"
 }
 choose_mac_model

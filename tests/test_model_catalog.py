@@ -63,6 +63,26 @@ def test_resolve_keeps_whisper_balanced_on_mlx_for_mac():
     assert placement.env_var == "WHISPER_MLX_MODEL"
 
 
+def test_resolve_cohere_on_mac_uses_verified_mlx_8bit_repo():
+    # Given Cohere Transcribe on a Mac (the placeholder id 'cohere-transcribe-03-2026'
+    # did not resolve on the Hub; the published MLX build is the -mlx-8bit repo)
+    placement = resolve("cohere-transcribe-2b", "Darwin", has_nvidia_gpu=False)
+
+    # Then it routes to mlx_audio with the Hub-verified MLX repo id
+    assert placement.backend == "mlx_audio"
+    assert placement.model == "mlx-community/cohere-transcribe-03-2026-mlx-8bit"
+    assert placement.env_var == "WHISPER_MLX_AUDIO_MODEL"
+
+
+def test_resolve_omnilingual_on_mac_raises_not_viable_without_mlx_build():
+    # Given Meta Omnilingual has no MLX-converted repo on the Hub (the mlx-community
+    # omniASR-* placeholder ids 404), so it has no viable Mac backend yet
+    # When we resolve it on a Mac
+    # Then it raises rather than offering an unrunnable download
+    with pytest.raises(ModelNotViableError):
+        resolve("omnilingual-llm-300m", "Darwin", has_nvidia_gpu=False)
+
+
 def test_resolve_cohere_on_linux_cpu_uses_crispasr_gguf():
     # Given Cohere on a CPU-only Linux box
     # When we resolve it

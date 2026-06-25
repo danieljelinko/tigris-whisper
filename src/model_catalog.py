@@ -95,31 +95,37 @@ MODELS: dict[str, ModelInfo] = {
 
     # ── Meta Omnilingual ASR (Nov 2025, Apache-2.0) ──────────────────────────
     # LLM family = best accuracy; CTC-300M = the CPU-viable option.
+    # `darwin` is None: no MLX-converted Omnilingual repo exists on the Hub yet
+    # (the mlx-community/omniASR-* ids 404; only facebook/* PyTorch repos exist),
+    # so mlx-audio has nothing to load. Restore a `_p("mlx_audio", "<id>")` here
+    # once an MLX build is published. Verified 2026-06-25.
     "omnilingual-llm-300m": ModelInfo(
         "Meta Omnilingual ASR LLM 300M", "Apache-2.0", "1600+ langs (incl. hu, fr)",
-        {"darwin":     _p("mlx_audio", "mlx-community/omniASR-LLM-300M"),
+        {"darwin":     None,
          "linux_cuda": _p("transformers_cuda", "facebook/omniASR-LLM-300M"),
          "linux_cpu":  _p("transformers_cpu", "facebook/omniASR-CTC-300M")}),
     "omnilingual-llm-1b": ModelInfo(
         "Meta Omnilingual ASR LLM 1B", "Apache-2.0", "1600+ langs (incl. hu, fr)",
-        {"darwin":     _p("mlx_audio", "mlx-community/omniASR-LLM-1B"),
+        {"darwin":     None,
          "linux_cuda": _p("transformers_cuda", "facebook/omniASR-LLM-1B"),
          "linux_cpu":  None}),
     "omnilingual-llm-3b": ModelInfo(
         "Meta Omnilingual ASR LLM 3B", "Apache-2.0", "1600+ langs (incl. hu, fr)",
-        {"darwin":     _p("mlx_audio", "mlx-community/omniASR-LLM-3B"),
+        {"darwin":     None,
          "linux_cuda": _p("transformers_cuda", "facebook/omniASR-LLM-3B"),
          "linux_cpu":  None}),
     "omnilingual-llm-7b": ModelInfo(
         "Meta Omnilingual ASR LLM 7B", "Apache-2.0", "1600+ langs (incl. hu, fr)",
-        {"darwin":     _p("mlx_audio", "mlx-community/omniASR-LLM-7B"),
+        {"darwin":     None,
          "linux_cuda": _p("transformers_cuda", "facebook/omniASR-LLM-7B"),
          "linux_cpu":  None}),
 
     # ── Cohere Transcribe (Mar 2026) ─────────────────────────────────────────
+    # darwin id verified on the Hub 2026-06-25: the published MLX build is the
+    # `-mlx-8bit` repo; the bare `cohere-transcribe-03-2026` id does not resolve.
     "cohere-transcribe-2b": ModelInfo(
         "Cohere Transcribe 2B", "CC-BY-NC-4.0", "14 langs (no hu)",
-        {"darwin":     _p("mlx_audio", "mlx-community/cohere-transcribe-03-2026"),
+        {"darwin":     _p("mlx_audio", "mlx-community/cohere-transcribe-03-2026-mlx-8bit"),
          "linux_cuda": _p("transformers_cuda", "CohereLabs/cohere-transcribe-03-2026"),
          "linux_cpu":  _p("crispasr", "cstr/cohere-transcribe-03-2026-GGUF")}),
 }
