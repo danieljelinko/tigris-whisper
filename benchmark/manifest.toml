@@ -1,0 +1,160 @@
+# Benchmark test-set manifest.
+# Each [[entry]] defines one (category, length, language, audio, reference) combination.
+# Add rows here to benchmark additional categories, lengths, or languages — or use the
+# add-benchmark-language skill.
+#
+# Fields:
+#   category     = test-set theme, used to group results in reports (e.g. "general", "software")
+#   length       = text length tier: "short" (~50-80 words), "medium" (~100 words), "long" (~1000 words)
+#   language     = Whisper language code (ISO 639-1)
+#   audio        = path to WAV recording (relative to repo root)
+#   reference    = path to ground-truth transcript text file (relative to repo root)
+#   label        = human-readable name shown in reports
+
+# ── General (everyday speech — Budapest trip diary) ────────────────────────
+
+[[entry]]
+category  = "general"
+length    = "short"
+language  = "en"
+audio     = "benchmark/data/general/short/en.wav"
+reference = "benchmark/data/general/short/en.txt"
+label     = "English"
+
+[[entry]]
+category  = "general"
+length    = "short"
+language  = "fr"
+audio     = "benchmark/data/general/short/fr.wav"
+reference = "benchmark/data/general/short/fr.txt"
+label     = "French"
+
+[[entry]]
+category  = "general"
+length    = "short"
+language  = "hu"
+audio     = "benchmark/data/general/short/hu.wav"
+reference = "benchmark/data/general/short/hu.txt"
+label     = "Hungarian"
+
+[[entry]]
+category  = "general"
+length    = "medium"
+language  = "en"
+audio     = "benchmark/data/general/medium/en.wav"
+reference = "benchmark/data/general/medium/en.txt"
+label     = "English"
+
+[[entry]]
+category  = "general"
+length    = "medium"
+language  = "fr"
+audio     = "benchmark/data/general/medium/fr.wav"
+reference = "benchmark/data/general/medium/fr.txt"
+label     = "French"
+
+[[entry]]
+category  = "general"
+length    = "medium"
+language  = "hu"
+audio     = "benchmark/data/general/medium/hu.wav"
+reference = "benchmark/data/general/medium/hu.txt"
+label     = "Hungarian"
+
+[[entry]]
+category  = "general"
+length    = "long"
+language  = "en"
+audio     = "benchmark/data/general/long/en.wav"
+reference = "benchmark/data/general/long/en.txt"
+label     = "English"
+
+[[entry]]
+category  = "general"
+length    = "long"
+language  = "fr"
+audio     = "benchmark/data/general/long/fr.wav"
+reference = "benchmark/data/general/long/fr.txt"
+label     = "French"
+
+[[entry]]
+category  = "general"
+length    = "long"
+language  = "hu"
+audio     = "benchmark/data/general/long/hu.wav"
+reference = "benchmark/data/general/long/hu.txt"
+label     = "Hungarian"
+
+# ── Software engineering / DevOps vocabulary ────────────────────────────────
+
+[[entry]]
+category  = "software"
+length    = "short"
+language  = "en"
+audio     = "benchmark/data/software/short/en.wav"
+reference = "benchmark/data/software/short/en.txt"
+label     = "English"
+
+[[entry]]
+category  = "software"
+length    = "short"
+language  = "fr"
+audio     = "benchmark/data/software/short/fr.wav"
+reference = "benchmark/data/software/short/fr.txt"
+label     = "French"
+
+[[entry]]
+category  = "software"
+length    = "short"
+language  = "hu"
+audio     = "benchmark/data/software/short/hu.wav"
+reference = "benchmark/data/software/short/hu.txt"
+label     = "Hungarian"
+
+[[entry]]
+category  = "software"
+length    = "medium"
+language  = "en"
+audio     = "benchmark/data/software/medium/en.wav"
+reference = "benchmark/data/software/medium/en.txt"
+label     = "English"
+
+[[entry]]
+category  = "software"
+length    = "medium"
+language  = "fr"
+audio     = "benchmark/data/software/medium/fr.wav"
+reference = "benchmark/data/software/medium/fr.txt"
+label     = "French"
+
+[[entry]]
+category  = "software"
+length    = "medium"
+language  = "hu"
+audio     = "benchmark/data/software/medium/hu.wav"
+reference = "benchmark/data/software/medium/hu.txt"
+label     = "Hungarian"
+
+[[entry]]
+category  = "software"
+length    = "long"
+language  = "en"
+audio     = "benchmark/data/software/long/en.wav"
+reference = "benchmark/data/software/long/en.txt"
+label     = "English"
+
+[[entry]]
+category  = "software"
+length    = "long"
+language  = "fr"
+audio     = "benchmark/data/software/long/fr.wav"
+reference = "benchmark/data/software/long/fr.txt"
+label     = "French"
+
+[[entry]]
+category  = "software"
+length    = "long"
+language  = "hu"
+audio     = "benchmark/data/software/long/hu.wav"
+reference = "benchmark/data/software/long/hu.txt"
+label     = "Hungarian"

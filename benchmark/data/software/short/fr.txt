@@ -1,0 +1,5 @@
+Avant de fusionner la pull request, assure-toi que le pipeline d'intégration continue passe les quarante-deux tests unitaires.
+L'application est empaquetée dans un conteneur Docker et déployée sur le cluster Kubernetes chez AWS.
+N'oublie pas de mettre à jour le fichier de configuration et de renouveler la clé API avant la prochaine version.
+Le script de migration de la base de données doit d'abord s'exécuter avec succès sur l'environnement de préproduction.
+Si le déploiement échoue, vérifie les journaux et reviens immédiatement à la version deux virgule trois.

@@ -1,0 +1,43 @@
+Analyse post-incident : panne du service de paiement, mardi 3 mars
+
+Résumé
+
+Mardi à deux heures quatorze du matin, l'ingénieur d'astreinte a été alerté après que le service de paiement a commencé à renvoyer des erreurs pour environ cinq pour cent des requêtes. Au cours des quatre-vingt-dix minutes suivantes, le taux d'erreur a augmenté de façon constante, atteignant un pic de trente-huit pour cent avant que le problème ne soit entièrement résolu à seize heures. La cause profonde était une fuite de connexions à la base de données provoquée par un changement de configuration déployé la veille après-midi, combinée à une politique de mise à l'échelle automatique qui a ajouté plus de pods applicatifs que la base de données ne pouvait en supporter.
+
+Chronologie
+
+Lundi à treize heures trente, un déploiement de routine a mis en production la version deux point onze du service de paiement sur le cluster de production hébergé chez AWS. La publication comprenait quarante-deux changements, pour la plupart de simples mises à jour de dépendances, mais l'un d'eux modifiait la configuration du pool de connexions à la base de données, augmentant la limite par pod de dix à vingt-cinq connexions.
+
+Le trafic est resté normal pour le reste de la journée de lundi. Mardi à deux heures quatorze du matin, pendant une période de trafic faible mais non nul, le pool de connexions d'un pod a atteint sa nouvelle limite de vingt-cinq connexions et a commencé à rejeter les nouvelles requêtes vers la base de données. La sonde de vivacité Kubernetes a détecté les délais d'attente qui en résultaient et a redémarré le pod, mais les connexions sous-jacentes n'ont pas été libérées proprement par le pilote de base de données, et elles sont donc restées ouvertes sur le serveur de base de données.
+
+À deux heures quarante, trois autres pods avaient atteint la même limite et avaient été redémarrés à leur tour. Chaque redémarrage laissait derrière lui une poignée de connexions orphelines, et la limite maximale de cent connexions de la base de données a été atteinte à trois heures cinq. À partir de ce moment, tout pod tentant d'ouvrir une nouvelle connexion échouait immédiatement, et le taux d'erreur est passé d'environ cinq pour cent à trente-huit pour cent en quatre minutes.
+
+À trois heures douze, l'ingénieur d'astreinte a escaladé le problème à l'équipe d'administration de la base de données et à l'équipe de la plateforme responsable du cluster Kubernetes. La première tentative de remédiation, qui consistait à redémarrer à nouveau les pods concernés, a temporairement aggravé la situation, car les nouveaux pods ouvraient immédiatement de nouvelles connexions alors que les connexions orphelines des redémarrages précédents étaient toujours retenues par la base de données.
+
+À trois heures trente et une, un administrateur de base de données a manuellement mis fin à quatre-vingt-sept connexions inactives à l'aide d'un script qui interrogeait la liste des processus de la base de données et terminait toute connexion inactive depuis plus de soixante secondes. Cela a libéré suffisamment de capacité pour que le service de paiement se rétablisse, et le taux d'erreur est retombé sous un pour cent en deux minutes.
+
+À trois heures quarante-cinq, l'équipe de la plateforme a effectué un retour arrière du service de paiement vers la version deux point dix, annulant le changement de configuration du pool de connexions et rétablissant la limite précédente de dix connexions par pod. À seize heures, toutes les métriques étaient revenues à leur niveau normal, et l'incident a été déclaré résolu.
+
+Impact
+
+Pendant cet incident de quatre-vingt-dix minutes, environ douze mille tentatives de paiement ont échoué, ce qui représente une perte de revenus d'environ neuf cents dollars sur la base de la valeur moyenne des commandes. Aucune donnée client n'a été perdue ou corrompue, et les systèmes du prestataire de paiement n'ont pas été affectés. Deux clients ont ouvert des tickets de support signalant que leurs commandes semblaient avoir été facturées deux fois ; les deux cas ont fait l'objet d'une enquête et se sont révélés être des autorisations de paiement en double, annulées automatiquement dans les vingt-quatre heures.
+
+Cause profonde
+
+L'élément déclencheur immédiat a été le changement de configuration de la version deux point onze, qui a augmenté la limite du pool de connexions par pod de dix à vingt-cinq sans augmentation correspondante de la limite maximale de connexions de la base de données. Avec le service de paiement réparti sur douze pods, la nouvelle configuration permettait jusqu'à trois cents connexions, dépassant largement la limite de cent de la base de données.
+
+Un facteur secondaire a été un problème connu du pilote de base de données, en version quatre point trois, qui ne libère pas toujours les connexions proprement lorsqu'un processus est interrompu par une sonde de vivacité Kubernetes. Cela a fait en sorte que les connexions des pods redémarrés restaient ouvertes côté base de données longtemps après la fin du processus applicatif correspondant, masquant le nombre réel de connexions disponibles et aggravant la situation à chaque redémarrage automatique.
+
+Un troisième facteur était l'absence d'alerte sur l'utilisation du pool de connexions de la base de données. Le nombre de connexions augmentait progressivement depuis le déploiement du lundi après-midi, mais aucun tableau de bord ni aucune alerte n'a signalé ce phénomène avant que le pool ne soit déjà épuisé tôt mardi matin.
+
+Actions correctives
+
+Premièrement, la configuration du pool de connexions à la base de données sera revue dans le cadre de chaque pull request touchant au service de paiement, avec une vérification automatisée ajoutée au pipeline d'intégration continue qui fera échouer la build si le nombre total de connexions possibles sur l'ensemble des pods dépasse quatre-vingts pour cent du maximum configuré de la base de données.
+
+Deuxièmement, l'équipe mettra à jour le pilote de base de données vers la version quatre point cinq, qui inclut un correctif pour le problème de libération des connexions, et ajoutera des tests d'intégration vérifiant spécifiquement que les connexions sont bien libérées après un redémarrage simulé de pod.
+
+Troisièmement, une nouvelle alerte sera ajoutée au tableau de bord de supervision, qui se déclenchera lorsque l'utilisation du pool de connexions à la base de données dépassera soixante-dix pour cent pendant plus de cinq minutes, laissant à l'ingénieur d'astreinte le temps d'intervenir avant que les clients ne soient affectés.
+
+Quatrièmement, le runbook des incidents du service de paiement sera mis à jour pour inclure le script de nettoyage des connexions utilisé par l'administrateur de base de données pendant cet incident, ainsi que des consignes claires sur les cas où redémarrer les pods est susceptible d'aider plutôt que d'aggraver un incident lié aux connexions.
+
+Enfin, l'équipe planifiera un test de charge sur un environnement de pré-production configuré avec les nouveaux paramètres du pool de connexions avant tout futur changement de ces limites en production, afin de détecter ce type de problème avant qu'il n'atteigne les clients.
