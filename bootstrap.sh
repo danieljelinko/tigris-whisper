@@ -116,7 +116,7 @@ fetch_repo() {
             printf "Remove it and reinstall the latest version? [y/N]: "
             read -r _reply < /dev/tty || _reply=""
         fi
-        case "${_reply,,}" in
+        case "$(printf '%s' "$_reply" | tr '[:upper:]' '[:lower:]')" in
             y|yes)
                 local backup_dir="${INSTALL_DIR}.backup.$(date +%Y%m%d%H%M%S)"
                 echo "Moving existing install aside → $backup_dir"
