@@ -7,8 +7,10 @@ launcher probes the real `uname` and GPU state and passes them in as args.
 import sys
 from typing import Literal
 
-Backend = Literal["docker_cuda", "faster_whisper", "whispercpp_cpu", "whispercpp_metal", "mlx"]
-BACKENDS: set[str] = {"docker_cuda", "faster_whisper", "whispercpp_cpu", "whispercpp_metal", "mlx"}
+Backend = Literal["docker_cuda", "faster_whisper", "whispercpp_cpu", "whispercpp_metal", "mlx",
+                  "mlx_audio", "transformers_cuda", "transformers_cpu", "nemo_cuda", "crispasr"]
+BACKENDS: set[str] = {"docker_cuda", "faster_whisper", "whispercpp_cpu", "whispercpp_metal", "mlx",
+                      "mlx_audio", "transformers_cuda", "transformers_cpu", "nemo_cuda", "crispasr"}
 
 
 class UnsupportedPlatformError(RuntimeError):

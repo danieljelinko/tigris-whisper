@@ -49,10 +49,10 @@ fake_nvidia
 result=$(bash "$SCRIPT_DIR/run.sh" --print-backend 2>/dev/null)
 [ "$result" = "docker_cuda" ] && ok "Linux+GPU → docker_cuda" || fail "Linux+GPU → docker_cuda (got: $result)"
 
-# Linux no GPU → whispercpp_cpu
+# Linux no GPU → faster_whisper (the current default; whisper.cpp CPU is opt-in via override)
 no_nvidia
 result=$(bash "$SCRIPT_DIR/run.sh" --print-backend 2>/dev/null)
-[ "$result" = "whispercpp_cpu" ] && ok "Linux no-GPU → whispercpp_cpu" || fail "Linux no-GPU → whispercpp_cpu (got: $result)"
+[ "$result" = "faster_whisper" ] && ok "Linux no-GPU → faster_whisper" || fail "Linux no-GPU → faster_whisper (got: $result)"
 
 # WHISPER_BACKEND override wins
 no_nvidia

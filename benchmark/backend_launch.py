@@ -18,6 +18,7 @@ BACKEND_SCRIPTS = {
     "whispercpp_metal": REPO / "scripts/lib/backend_whispercpp.sh",
     "docker_cuda":     REPO / "scripts/lib/backend_docker.sh",
     "mlx":             REPO / "scripts/lib/backend_mlx.sh",
+    "mlx_audio":       REPO / "scripts/lib/backend_mlx_audio.sh",
 }
 
 ENSURE_FN = {
@@ -26,6 +27,7 @@ ENSURE_FN = {
     "whispercpp_metal": "ensure_whispercpp_backend",
     "docker_cuda":      "ensure_docker_backend",
     "mlx":              "ensure_mlx_backend",
+    "mlx_audio":        "ensure_mlx_audio_backend",
 }
 
 PORT_VARS = {
@@ -34,6 +36,7 @@ PORT_VARS = {
     "whispercpp_metal": "WHISPERCPP_PORT",
     "docker_cuda":     "WHISPER_PORT",
     "mlx":             "WHISPER_MLX_PORT",
+    "mlx_audio":       "WHISPER_MLX_AUDIO_PORT",
 }
 
 MODEL_VARS = {
@@ -41,6 +44,7 @@ MODEL_VARS = {
     "whispercpp_cpu":  "WHISPERCPP_MODEL",
     "whispercpp_metal": "WHISPERCPP_MODEL",
     "mlx":             "WHISPER_MLX_MODEL",
+    "mlx_audio":       "WHISPER_MLX_AUDIO_MODEL",
     "docker_cuda":     None,
 }
 

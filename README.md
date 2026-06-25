@@ -131,10 +131,43 @@ pre-download helper first so Terminal users can see Hugging Face progress bars.
 Change the installed model later without editing files:
 
 ```bash
-./scripts/change_mlx_model.sh
-./scripts/change_mlx_model.sh fast --restart
-./scripts/change_mlx_model.sh mlx-community/whisper-small-mlx-q4 --restart
+./scripts/change_model.sh                       # interactive picker (lists models for your host)
+./scripts/change_model.sh fast --restart        # Whisper profile shorthand
+./scripts/change_model.sh nemotron-3.5-0.6b --restart
 ```
+
+`change_model.sh` is **catalog-driven**: picking a model also selects the right
+backend for your machine (it writes `WHISPER_BACKEND` + the model into
+`tigris-whisper.env`), so switching between model families is seamless — the
+daemon and hotkey are unchanged. `change_mlx_model.sh` /
+`change_faster_whisper_model.sh` remain as compatibility wrappers.
+
+### Available models & licenses
+
+Beyond Whisper, newer open-weight ASR models can be selected (by the `key` below).
+**Licenses differ — read them before relying on a model, especially commercially.**
+
+| Key | Model | Mac (MLX) | Linux+GPU | Linux CPU | Languages | License |
+|---|---|---|---|---|---|---|
+| `balanced`/`fast`/`very-fast`/`best-accuracy` | OpenAI Whisper | ✅ mlx-whisper | ✅ Docker CUDA | ✅ faster-whisper | 99+ | **MIT** |
+| `nemotron-3.5-0.6b` | NVIDIA Nemotron 3.5 ASR 0.6B | ✅ mlx-audio | ⏳ NeMo | — | 40 locales (incl. fr, hu) | **NVIDIA OpenMDW-1.1** |
+| `omnilingual-llm-300m…7b` | Meta Omnilingual ASR (300M/1B/3B/7B) | ✅ mlx-audio | ⏳ transformers | ⏳ 300M CTC | 1600+ (incl. **hu**, fr) | **Apache-2.0** |
+| `cohere-transcribe-2b` | Cohere Transcribe 2B | ✅ mlx-audio | ⏳ transformers | ⏳ CrispASR GGUF | 14 (no hu) | **CC-BY-NC-4.0** (non-commercial) |
+
+✅ = available now · ⏳ = planned (Linux GPU/CPU phases). The picker only offers
+combinations implemented on your host. License notes:
+
+- **Whisper** — MIT, fully permissive (commercial OK).
+- **Meta Omnilingual ASR** — Apache-2.0; broadest language coverage, the best
+  pick for Hungarian.
+- **NVIDIA Nemotron 3.5 ASR** — NVIDIA Open Model License (OpenMDW-1.1); review
+  its terms for your use case.
+- **Cohere Transcribe** — **CC-BY-NC-4.0: non-commercial only.** Top accuracy and
+  the only one with a Linux-CPU path, but do **not** use it in a commercial
+  product. No Hungarian support.
+
+When you choose a model, tigris-whisper does not bundle its weights — they
+download from Hugging Face on first use under that model's own license.
 
 **Linux no-GPU setup** (faster-whisper is now the default — no build step):
 ```bash

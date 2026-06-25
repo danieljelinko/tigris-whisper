@@ -133,6 +133,7 @@ if [ "$OS" = "Darwin" ]; then
     remove_path "$LOG_DIR"
     remove_path "$STATE_DIR"
     remove_path "$HOME/.cache/whisper.cpp/mlx_server.log"
+    remove_path "$HOME/.cache/whisper.cpp/mlx_audio_server.log"
 else
     remove_path "$HOME/.local/share/whisper_hotkey.log"
 fi
@@ -147,6 +148,15 @@ if [ "$REMOVE_MODELS" -eq 1 ]; then
     remove_path "$(hf_cache_dir_for_model "mlx-community/whisper-small-mlx-q4")"
     remove_path "$(hf_cache_dir_for_model "mlx-community/whisper-base-mlx-q4")"
     remove_path "$(hf_cache_dir_for_model "mlx-community/whisper-large-v3-turbo")"
+    # mlx_audio model families (Nemotron / Omnilingual / Cohere), incl. any configured one
+    [ -n "${WHISPER_MLX_AUDIO_MODEL:-}" ] && remove_path "$(hf_cache_dir_for_model "$WHISPER_MLX_AUDIO_MODEL")"
+    for m in \
+        mlx-community/nemotron-3.5-asr-streaming-0.6b \
+        mlx-community/omniASR-LLM-300M mlx-community/omniASR-LLM-1B \
+        mlx-community/omniASR-LLM-3B mlx-community/omniASR-LLM-7B \
+        mlx-community/cohere-transcribe-03-2026; do
+        remove_path "$(hf_cache_dir_for_model "$m")"
+    done
 else
     echo "Kept HuggingFace model cache"
 fi

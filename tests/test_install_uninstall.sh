@@ -267,10 +267,12 @@ grep -q "4. Confirm Microphone is enabled:" "$bootstrap_out" && \
 # ─── change_mlx_model.sh: updates model config without reinstall ─────────────
 
 MODEL_TEST_DIR="$TMP/model-change"
-mkdir -p "$MODEL_TEST_DIR"
-cp "$SCRIPT_DIR/scripts/change_mlx_model.sh" "$MODEL_TEST_DIR/change_mlx_model.sh"
-mkdir -p "$MODEL_TEST_DIR/scripts"
-mv "$MODEL_TEST_DIR/change_mlx_model.sh" "$MODEL_TEST_DIR/scripts/change_mlx_model.sh"
+mkdir -p "$MODEL_TEST_DIR/scripts" "$MODEL_TEST_DIR/src"
+# The compat wrapper exec's change_model.sh, which resolves models via the
+# stdlib-only model_catalog. Copy all three so the switcher runs in isolation.
+cp "$SCRIPT_DIR/scripts/change_mlx_model.sh" "$MODEL_TEST_DIR/scripts/change_mlx_model.sh"
+cp "$SCRIPT_DIR/scripts/change_model.sh"     "$MODEL_TEST_DIR/scripts/change_model.sh"
+cp "$SCRIPT_DIR/src/model_catalog.py" "$SCRIPT_DIR/src/backend_select.py" "$MODEL_TEST_DIR/src/"
 
 model_out="$TMP/model-change.out"
 if bash "$MODEL_TEST_DIR/scripts/change_mlx_model.sh" fast >"$model_out" 2>&1; then

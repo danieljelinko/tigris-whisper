@@ -107,6 +107,11 @@ mlx)
     source "$SCRIPT_DIR/scripts/lib/backend_mlx.sh"
     ensure_mlx_backend
     ;;
+mlx_audio)
+    # shellcheck source=scripts/lib/backend_mlx_audio.sh
+    source "$SCRIPT_DIR/scripts/lib/backend_mlx_audio.sh"
+    ensure_mlx_audio_backend
+    ;;
 *)
     echo "Error: unknown backend '$BACKEND'"; exit 1 ;;
 esac
