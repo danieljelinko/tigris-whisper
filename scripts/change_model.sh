@@ -24,7 +24,7 @@ fi
 
 # Backends implemented on this install. Update as Linux GPU/CPU phases land so the
 # picker only offers models that actually run here.
-IMPLEMENTED_BACKENDS="mlx,mlx_audio,faster_whisper,docker_cuda,whispercpp_cpu,whispercpp_metal"
+IMPLEMENTED_BACKENDS="mlx,mlx_audio,faster_whisper,docker_cuda,whispercpp_cpu,whispercpp_metal,transformers_cuda,nemo_cuda"
 
 # GPU flag, mirroring run.sh detection.
 GPU_FLAG=""

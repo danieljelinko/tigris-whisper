@@ -112,6 +112,16 @@ mlx_audio)
     source "$SCRIPT_DIR/scripts/lib/backend_mlx_audio.sh"
     ensure_mlx_audio_backend
     ;;
+transformers_cuda)
+    # shellcheck source=scripts/lib/backend_transformers.sh
+    source "$SCRIPT_DIR/scripts/lib/backend_transformers.sh"
+    ensure_transformers_backend
+    ;;
+nemo_cuda)
+    # shellcheck source=scripts/lib/backend_nemo.sh
+    source "$SCRIPT_DIR/scripts/lib/backend_nemo.sh"
+    ensure_nemo_backend
+    ;;
 *)
     echo "Error: unknown backend '$BACKEND'"; exit 1 ;;
 esac

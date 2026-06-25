@@ -19,6 +19,8 @@ BACKEND_SCRIPTS = {
     "docker_cuda":     REPO / "scripts/lib/backend_docker.sh",
     "mlx":             REPO / "scripts/lib/backend_mlx.sh",
     "mlx_audio":       REPO / "scripts/lib/backend_mlx_audio.sh",
+    "transformers_cuda": REPO / "scripts/lib/backend_transformers.sh",
+    "nemo_cuda":       REPO / "scripts/lib/backend_nemo.sh",
 }
 
 ENSURE_FN = {
@@ -28,6 +30,8 @@ ENSURE_FN = {
     "docker_cuda":      "ensure_docker_backend",
     "mlx":              "ensure_mlx_backend",
     "mlx_audio":        "ensure_mlx_audio_backend",
+    "transformers_cuda": "ensure_transformers_backend",
+    "nemo_cuda":        "ensure_nemo_backend",
 }
 
 PORT_VARS = {
@@ -37,6 +41,8 @@ PORT_VARS = {
     "docker_cuda":     "WHISPER_PORT",
     "mlx":             "WHISPER_MLX_PORT",
     "mlx_audio":       "WHISPER_MLX_AUDIO_PORT",
+    "transformers_cuda": "WHISPER_TRANSFORMERS_PORT",
+    "nemo_cuda":       "WHISPER_NEMO_PORT",
 }
 
 MODEL_VARS = {
@@ -45,6 +51,8 @@ MODEL_VARS = {
     "whispercpp_metal": "WHISPERCPP_MODEL",
     "mlx":             "WHISPER_MLX_MODEL",
     "mlx_audio":       "WHISPER_MLX_AUDIO_MODEL",
+    "transformers_cuda": "WHISPER_TRANSFORMERS_MODEL",
+    "nemo_cuda":       "WHISPER_NEMO_MODEL",
     "docker_cuda":     None,
 }
 
