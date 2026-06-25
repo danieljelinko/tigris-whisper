@@ -1,0 +1,43 @@
+Incidenselemzés: a fizetési szolgáltatás üzemkiesése, március 3., kedd
+
+Összefoglaló
+
+Kedden hajnali két óra tizennégykor az ügyeletes mérnök riasztást kapott, miután a fizetési szolgáltatás a kérések körülbelül öt százalékára hibával kezdett válaszolni. A következő kilencven percben a hibaarány folyamatosan emelkedett, végül harmincnyolc százalékon tetőzött, mielőtt a problémát négy órakor teljesen megoldották. A kiváltó ok egy adatbázis-kapcsolat szivárgás volt, amelyet az előző délután telepített konfigurációváltozás okozott, párosulva egy automatikus skálázási szabállyal, amely több alkalmazás-podot indított, mint amennyit az adatbázis támogatni tudott.
+
+Idővonal
+
+Hétfőn délután fél kettőkor egy rutinszerű telepítés kigördítette a fizetési szolgáltatás kettő pont tizenegyes verzióját az AWS-en futó éles fürtre. A kiadás negyvenkét változtatást tartalmazott, ezek többsége apró függőségfrissítés volt, de az egyik módosította az adatbázis kapcsolatkészletének konfigurációját, podonként tízről huszonötre növelve a kapcsolatok limitjét.
+
+A forgalom hétfő hátralévő részében normális maradt. Kedden hajnali két óra tizennégykor, egy alacsony, de nem nulla forgalmú időszakban, az egyik pod kapcsolatkészlete elérte az új, huszonöt kapcsolatos limitet, és elkezdte elutasítani az új adatbázis-lekérdezéseket. A Kubernetes liveness próba érzékelte az ebből eredő időtúllépéseket, és újraindította a podot, de az alatta lévő kapcsolatokat az adatbázis-illesztőprogram nem szabadította fel megfelelően, ezért azok nyitva maradtak az adatbázis-szerveren.
+
+Két óra negyvenre további három pod elérte ugyanezt a limitet, és sorra újraindultak. Minden egyes újraindítás néhány árva kapcsolatot hagyott maga után, és az adatbázis száz kapcsolatos maximumát három óra ötkor érték el. Ettől a ponttól kezdve minden pod azonnal hibát kapott, amikor új kapcsolatot próbált nyitni, és a hibaarány körülbelül öt százalékról harmincnyolc százalékra ugrott négy percen belül.
+
+Három óra tizenkettőkor az ügyeletes mérnök eszkalálta a problémát az adatbázis-adminisztrációs csapathoz és a Kubernetes-fürtért felelős platformcsapathoz. Az első enyhítési kísérlet, vagyis az érintett podok újbóli újraindítása, átmenetileg rontott a helyzeten, mivel az új podok azonnal új kapcsolatokat nyitottak, miközben az előző újraindításokból származó árva kapcsolatokat az adatbázis még mindig fogva tartotta.
+
+Három óra harmincegykor egy adatbázis-adminisztrátor manuálisan megszakított nyolcvanhét inaktív kapcsolatot egy szkript segítségével, amely lekérdezte az adatbázis folyamatlistáját, és megszüntetett minden hatvan másodpercnél tovább tétlen kapcsolatot. Ez elegendő kapacitást szabadított fel ahhoz, hogy a fizetési szolgáltatás helyreálljon, és a hibaarány két percen belül egy százalék alá esett vissza.
+
+Három óra negyvenötkor a platformcsapat visszaállította a fizetési szolgáltatást a kettő pont tízes verzióra, visszavonva a kapcsolatkészlet konfigurációs változtatását, és helyreállítva a korábbi, podonkénti tíz kapcsolatos limitet. Négy órára minden mutató visszatért a normál szintre, és az incidenst megoldottnak nyilvánították.
+
+Hatás
+
+A kilencven perces incidens alatt körülbelül tizenkétezer fizetési kísérlet hiúsult meg, ami az átlagos rendelési érték alapján nagyjából kilencszáz dollár bevételkiesést jelentett. Ügyféladat nem veszett el és nem sérült, és a fizetési szolgáltató rendszereit sem érintette a probléma. Két ügyfél nyitott támogatási jegyet, jelezve, hogy a rendelésüket kétszer terhelték meg; mindkét esetet kivizsgálták, és kiderült, hogy duplikált, ideiglenes terhelésekről van szó, amelyeket huszonnégy órán belül automatikusan visszavontak.
+
+Kiváltó ok
+
+A közvetlen kiváltó ok a kettő pont tizenegyes verzió konfigurációváltozása volt, amely podonként tízről huszonötre növelte a kapcsolatkészlet limitjét anélkül, hogy az adatbázis maximális kapcsolatszámát ennek megfelelően megemelték volna. Mivel a fizetési szolgáltatás tizenkét podon futott, az új konfiguráció akár háromszáz kapcsolatot is megengedett, ami messze meghaladta az adatbázis száz kapcsolatos limitjét.
+
+Másodlagos közrejátszó tényező volt egy ismert hiba az adatbázis-illesztőprogram négy pont hármas verziójában, amely nem mindig szabadítja fel megfelelően a kapcsolatokat, ha egy folyamatot a Kubernetes liveness próbája szüntet meg. Emiatt az újraindított podok kapcsolatai jóval az alkalmazásfolyamat leállása után is nyitva maradtak az adatbázis oldalán, elfedve az elérhető kapcsolatok valós számát, és minden automatikus újraindítással tovább rontva a helyzeten.
+
+A harmadik tényező az adatbázis kapcsolatkészlet kihasználtságára vonatkozó riasztás hiánya volt. A kapcsolatok száma fokozatosan nőtt a hétfő délutáni telepítés óta, de erre sem műszerfal, sem riasztás nem hívta fel a figyelmet, mire a kapcsolatkészlet kedd kora reggelre kimerült.
+
+Teendők
+
+Először is, az adatbázis kapcsolatkészletének konfigurációját minden olyan pull request részeként felül fogják vizsgálni, amely érinti a fizetési szolgáltatást, és a folyamatos integrációs pipeline-hoz egy automatikus ellenőrzést adnak hozzá, amely megbuktatja a buildet, ha az összes pod kapcsolatainak lehetséges összege meghaladná az adatbázis konfigurált maximumának nyolcvan százalékát.
+
+Másodszor, a csapat frissíti az adatbázis-illesztőprogramot a négy pont ötös verzióra, amely tartalmazza a kapcsolat-felszabadítási hiba javítását, és olyan integrációs teszteket ad hozzá, amelyek kifejezetten ellenőrzik, hogy a kapcsolatok felszabadulnak-e egy szimulált pod-újraindítás után.
+
+Harmadszor, egy új riasztást adnak hozzá a monitorozási műszerfalhoz, amely akkor indul el, ha az adatbázis kapcsolatkészletének kihasználtsága öt percnél tovább meghaladja a hetven százalékot, így az ügyeletes mérnöknek lesz ideje beavatkozni, mielőtt az ügyfeleket érintené a probléma.
+
+Negyedszer, a fizetési szolgáltatás incidenseire vonatkozó runbookot frissítik, hogy tartalmazza az adatbázis-adminisztrátor által ezen incidens során használt kapcsolat-felszabadító szkriptet, valamint egyértelmű útmutatást arról, hogy a podok újraindítása mikor segít, és mikor ronthat egy kapcsolatokkal összefüggő incidensen.
+
+Végül a csapat terheléses tesztet ütemez egy olyan teszt környezetben, amely az új kapcsolatkészlet-beállításokkal van konfigurálva, mielőtt ezeknek a limiteknek bármilyen jövőbeli módosítását éles környezetbe telepítenék, hogy ezt a típusú problémát még azelőtt elkapják, hogy elérné az ügyfeleket.

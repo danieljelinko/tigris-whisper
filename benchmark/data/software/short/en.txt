@@ -1,0 +1,5 @@
+Before merging the pull request, make sure the continuous integration pipeline passes all forty-two unit tests.
+The application is packaged as a Docker container and deployed to the Kubernetes cluster on AWS.
+Remember to update the configuration file and rotate the API key before the next release.
+The database migration script must run successfully on the staging environment first.
+If the deployment fails, check the logs and roll back to version two point three immediately.

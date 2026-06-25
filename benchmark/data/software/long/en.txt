@@ -1,0 +1,43 @@
+Incident Postmortem: Checkout Service Outage, Tuesday 3 March
+
+Summary
+
+On Tuesday at two fourteen in the morning, the on-call engineer was paged after the checkout service began returning errors for approximately five percent of requests. Over the following ninety minutes, the error rate climbed steadily, eventually peaking at thirty-eight percent before the issue was fully resolved at four o'clock. The root cause was a database connection leak introduced by a configuration change deployed the previous afternoon, combined with an autoscaling policy that added more application pods than the database could support.
+
+Timeline
+
+At one thirty in the afternoon on Monday, a routine deployment rolled out version two point eleven of the checkout service to the production cluster on AWS. The release included forty-two changes, most of them minor dependency updates, but one change modified the database connection pool configuration, increasing the per-pod limit from ten connections to twenty-five.
+
+Traffic remained normal for the rest of Monday. At two fourteen in the morning on Tuesday, during a period of low but non-zero traffic, the connection pool on one pod reached its new limit of twenty-five connections and began rejecting new database queries. The Kubernetes liveness probe detected the resulting timeouts and restarted the pod, but the underlying connections were not released cleanly by the database driver, so they remained open on the database server.
+
+By two forty, three more pods had hit the same limit and were restarted in turn. Each restart left behind a handful of orphaned connections, and the database's maximum connection limit of one hundred was reached at three oh five. From that point on, any pod attempting to open a new connection failed immediately, and the error rate jumped from around five percent to thirty-eight percent within four minutes.
+
+At three twelve, the on-call engineer escalated to the database administration team and to the platform team responsible for the Kubernetes cluster. The first mitigation attempt, restarting the affected pods again, made the situation temporarily worse, since the new pods immediately opened fresh connections while the orphaned ones from the previous restarts were still being held by the database.
+
+At three thirty-one, a database administrator manually terminated eighty-seven idle connections using a script that queried the database's process list and killed any connection that had been idle for more than sixty seconds. This freed up enough capacity for the checkout service to recover, and the error rate dropped back below one percent within two minutes.
+
+At three forty-five, the platform team rolled back the checkout service to version two point ten, reverting the connection pool configuration change and restoring the previous per-pod limit of ten connections. By four o'clock, all metrics had returned to their normal baseline, and the incident was declared resolved.
+
+Impact
+
+During the ninety-minute incident, approximately twelve thousand checkout attempts failed, representing roughly nine hundred dollars in lost revenue based on the average order value. No customer data was lost or corrupted, and the payment provider's systems were not affected. Two customers opened support tickets reporting that their orders appeared to have been charged twice; both were investigated and found to be duplicate authorization holds that were automatically reversed within twenty-four hours.
+
+Root Cause
+
+The immediate trigger was the configuration change in version two point eleven that increased the per-pod connection pool limit from ten to twenty-five without a corresponding increase in the database's maximum connection limit. With the checkout service running across twelve pods, the new configuration allowed for up to three hundred connections, far exceeding the database's limit of one hundred.
+
+A secondary contributing factor was a known issue in the database driver, version four point three, which does not always release connections cleanly when a process is terminated by a Kubernetes liveness probe. This caused connections from restarted pods to remain open on the database side long after the corresponding application process had exited, masking the true number of available connections and making the situation worse with each automatic restart.
+
+A third factor was the absence of an alert on database connection pool utilization. The connection count had been climbing gradually since the Monday afternoon deployment, but no dashboard or alert flagged this until the pool was already exhausted early Tuesday morning.
+
+Action Items
+
+First, the database connection pool configuration will be reviewed as part of every pull request that touches the checkout service, with an automated check added to the continuous integration pipeline that fails the build if the total possible connections across all pods would exceed eighty percent of the database's configured maximum.
+
+Second, the team will upgrade the database driver to version four point five, which includes a fix for the connection cleanup issue, and will add integration tests that specifically verify connections are released after a simulated pod restart.
+
+Third, a new alert will be added to the monitoring dashboard that triggers when database connection pool utilization exceeds seventy percent for more than five minutes, giving the on-call engineer time to intervene before customers are affected.
+
+Fourth, the runbook for checkout service incidents will be updated to include the connection-cleanup script used by the database administrator during this incident, along with clear guidance on when restarting pods is likely to help versus make a connection-related incident worse.
+
+Finally, the team will schedule a load test against a staging environment configured with the new connection pool settings before any future change to these limits is deployed to production, to catch this category of issue before it reaches customers.

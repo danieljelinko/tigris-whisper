@@ -1,0 +1,5 @@
+Mielőtt összevonod a pull requestet, győződj meg róla, hogy a folyamatos integrációs pipeline mind a negyvenkét egységtesztet sikeresen lefuttatja.
+Az alkalmazás egy Docker konténerbe van csomagolva, és az AWS-en futó Kubernetes klaszterre kerül telepítésre.
+Ne felejtsd el frissíteni a konfigurációs fájlt, és lecserélni az API kulcsot a következő kiadás előtt.
+Az adatbázis-migrációs szkriptnek előbb a teszt környezetben kell sikeresen lefutnia.
+Ha a telepítés sikertelen, ellenőrizd a naplókat, és azonnal állj vissza a kettő pont három verzióra.

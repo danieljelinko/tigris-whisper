@@ -44,14 +44,20 @@ def _load_results(results_dir: pathlib.Path) -> list[dict]:
     return rows
 
 
+_LENGTH_ORDER = {"short": 0, "medium": 1, "long": 2}
+
+
 def _best_rows(rows: list[dict]) -> list[dict]:
-    "Keep the most recent result per (backend, language)."
+    "Keep the most recent result per (backend, category, length, language)."
     best: dict[tuple, dict] = {}
     for r in rows:
-        key = (r.get("backend", ""), r.get("language", ""))
+        key = (r.get("backend", ""), r.get("category", ""), r.get("length", ""), r.get("language", ""))
         if key not in best or r.get("timestamp", "") > best[key].get("timestamp", ""):
             best[key] = r
-    return sorted(best.values(), key=lambda r: (r.get("backend", ""), r.get("language", "")))
+    return sorted(best.values(), key=lambda r: (
+        r.get("backend", ""), r.get("category", ""),
+        _LENGTH_ORDER.get(r.get("length", ""), 9), r.get("language", ""),
+    ))
 
 
 def render_table(results_dir: pathlib.Path) -> str:
@@ -60,16 +66,18 @@ def render_table(results_dir: pathlib.Path) -> str:
         return "_No benchmark results yet. Run `uv run python benchmark/run_suite.py` to generate them._\n"
 
     lines = [
-        "| Backend | Model | Hardware | Language | Latency | RTF | WER | F1 | Words right |",
-        "|---|---|---|---|---|---|---|---|---|",
+        "| Backend | Model | Hardware | Category | Length | Language | Latency | RTF | WER | F1 | Words right |",
+        "|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for r in rows:
         hw   = r.get("hardware", {})
         cpu  = hw.get("cpu", "?").split("@")[0].strip()   # truncate freq
         lang = r.get("label", r.get("language", "?"))
+        cat  = r.get("category", "?")
+        length = r.get("length", "?")
         lines.append(
             f"| {r.get('backend','?')} | {r.get('model','?')} | {cpu} "
-            f"| {lang} | {r.get('latency_s','?'):.2f}s "
+            f"| {cat} | {length} | {lang} | {r.get('latency_s','?'):.2f}s "
             f"| {r.get('rtf', 0):.3f} | {r.get('wer', 0):.1%} "
             f"| {r.get('f1', 0):.1%} "
             f"| {r.get('words_right','?')}/{r.get('words_total','?')} |"

@@ -12,4 +12,4 @@ __pycache__/
 tigris-whisper.env
 
 # Benchmark audio recordings (large user-recorded WAVs — not committed)
-benchmark/data/audio/*.wav
+benchmark/data/**/*.wav

@@ -44,6 +44,7 @@ def _run_one(entry: dict, endpoint: str, fold_accents: bool) -> dict | None:
         r   = score(ref, text, fold_accents=fold_accents)
         print(f"latency={latency:.2f}s  WER={r.wer:.1%}  F1={r.f1:.1%}")
         return {
+            "category": entry.get("category", ""), "length": entry.get("length", ""),
             "language": lang, "label": entry.get("label", lang),
             "audio_dur_s": round(dur, 3), "latency_s": round(latency, 3),
             "rtf": round(rtf, 3),
@@ -66,27 +67,44 @@ def _aggregate_md(backend: str, model_id: str, hw: dict,
     hw_str = f"{hw['cpu']} ({hw['os']} {hw['os_ver']})"
     lines = [
         f"# Benchmark results — {backend}",
-        f"",
+        "",
         f"**Date:** {ts}  |  **Backend:** {backend}  |  **Model:** {model_id}",
         f"**Hardware:** {hw_str}",
-        f"",
+        "",
+    ]
+
+    # group by (category, length) preserving manifest order
+    groups: dict[tuple, list[dict]] = {}
+    for r in rows:
+        if r is None: continue
+        key = (r.get("category", ""), r.get("length", ""))
+        groups.setdefault(key, []).append(r)
+
+    TABLE_HDR = [
         "| Language | Audio dur | Latency | RTF | WER | Precision | Recall | F1 | Words right |",
         "|---|---|---|---|---|---|---|---|---|",
     ]
-    for r in rows:
-        if r is None: continue
-        lines.append(
-            f"| {r['label']} | {r['audio_dur_s']:.1f}s | {r['latency_s']:.2f}s | "
-            f"{r['rtf']:.3f} | {r['wer']:.1%} | {r['precision']:.1%} | "
-            f"{r['recall']:.1%} | {r['f1']:.1%} | {r['words_right']}/{r['words_total']} |"
-        )
+
+    def _row_line(r: dict) -> str:
+        return (f"| {r['label']} | {r['audio_dur_s']:.1f}s | {r['latency_s']:.2f}s | "
+                f"{r['rtf']:.3f} | {r['wer']:.1%} | {r['precision']:.1%} | "
+                f"{r['recall']:.1%} | {r['f1']:.1%} | {r['words_right']}/{r['words_total']} |")
+
+    for (category, length), group_rows in groups.items():
+        section = " — ".join(p.capitalize() for p in [category, length] if p)
+        if section: lines += [f"## {section}", ""]
+        lines += TABLE_HDR
+        lines += [_row_line(r) for r in group_rows]
+        lines.append("")
+
     if detailed:
-        lines += ["", "---", ""]
+        lines += ["---", ""]
         for r in rows:
             if r is None: continue
+            cat_len = f"{r.get('category','')} / {r.get('length','')} / " if r.get("category") else ""
             chunks = word_diff(r["_result"])
             lines += [
-                f"## {r['label']} — word diff",
+                f"## {cat_len}{r['label']} — word diff",
                 "",
                 "| Op | Reference | Hypothesis |",
                 "|---|---|---|",
