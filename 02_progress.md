@@ -23,6 +23,7 @@
 
 ## Done
 | Date | Task | Verified by |
+| 2026-06-25 | Floor `numba >=0.60` in pixi.toml — fixes `pixi install` backtracking to numba 0.53.1 (unbuildable sdist on py3.12) on Evi's Mac. Pushed to main. | Cross-platform resolve on Linux (`uv pip compile --python-platform aarch64-apple-darwin --python-version 3.12` → numba 0.65.1 + numpy 2.4.6, both wheel-backed). **Pending on-device confirm: Evi re-runs bootstrap.** |
 | 2026-06-08 | Benchmark harness — `benchmark/` dir, eval/client/hardware/backend_launch/run_benchmark/run_suite/readme_snippet; TDD tests (26 green); EN/FR/HU reference texts; manifest.toml; README BENCH markers; add-benchmark-language skill | `uv run python -m pytest` 26/26 |
 |---|---|---|
 | 2026-06-07 | Phase 3.1–3.5: faster-whisper Linux CPU backend | `src/faster_whisper_server.py`, `scripts/lib/backend_faster_whisper.sh`, `scripts/change_faster_whisper_model.sh`; `backend_select` routes Linux no-GPU → `faster_whisper`; install.sh adds model picker + pre-download |
