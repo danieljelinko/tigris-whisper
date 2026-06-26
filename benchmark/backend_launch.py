@@ -21,6 +21,7 @@ BACKEND_SCRIPTS = {
     "mlx_audio":       REPO / "scripts/lib/backend_mlx_audio.sh",
     "transformers_cuda": REPO / "scripts/lib/backend_transformers.sh",
     "nemo_cuda":       REPO / "scripts/lib/backend_nemo.sh",
+    "crispasr":        REPO / "scripts/lib/backend_crispasr.sh",
 }
 
 ENSURE_FN = {
@@ -32,6 +33,7 @@ ENSURE_FN = {
     "mlx_audio":        "ensure_mlx_audio_backend",
     "transformers_cuda": "ensure_transformers_backend",
     "nemo_cuda":        "ensure_nemo_backend",
+    "crispasr":         "ensure_crispasr_backend",
 }
 
 PORT_VARS = {
@@ -43,6 +45,7 @@ PORT_VARS = {
     "mlx_audio":       "WHISPER_MLX_AUDIO_PORT",
     "transformers_cuda": "WHISPER_TRANSFORMERS_PORT",
     "nemo_cuda":       "WHISPER_NEMO_PORT",
+    "crispasr":        "WHISPER_CRISPASR_PORT",
 }
 
 MODEL_VARS = {
@@ -53,6 +56,7 @@ MODEL_VARS = {
     "mlx_audio":       "WHISPER_MLX_AUDIO_MODEL",
     "transformers_cuda": "WHISPER_TRANSFORMERS_MODEL",
     "nemo_cuda":       "WHISPER_NEMO_MODEL",
+    "crispasr":        "WHISPER_CRISPASR_MODEL",
     "docker_cuda":     None,
 }
 

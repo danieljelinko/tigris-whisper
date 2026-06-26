@@ -122,6 +122,11 @@ nemo_cuda)
     source "$SCRIPT_DIR/scripts/lib/backend_nemo.sh"
     ensure_nemo_backend
     ;;
+crispasr)
+    # shellcheck source=scripts/lib/backend_crispasr.sh
+    source "$SCRIPT_DIR/scripts/lib/backend_crispasr.sh"
+    ensure_crispasr_backend
+    ;;
 *)
     echo "Error: unknown backend '$BACKEND'"; exit 1 ;;
 esac

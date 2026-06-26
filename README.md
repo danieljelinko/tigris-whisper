@@ -152,13 +152,16 @@ Beyond Whisper, newer open-weight ASR models can be selected (by the `key` below
 | `balanced`/`fast`/`very-fast`/`best-accuracy` | OpenAI Whisper | ✅ mlx-whisper | ✅ Docker CUDA | ✅ faster-whisper | 99+ | **MIT** |
 | `nemotron-3.5-0.6b` | NVIDIA Nemotron 3.5 ASR 0.6B | ✅ mlx-audio | ✅ NeMo | — | 40 locales (incl. fr, hu) | **NVIDIA OpenMDW-1.1** |
 | `omnilingual-llm-300m…7b` | Meta Omnilingual ASR (300M/1B/3B/7B) | ⏳ no MLX build yet | ✅ transformers | ⏳ 300M CTC | 1600+ (incl. **hu**, fr) | **Apache-2.0** |
-| `cohere-transcribe-2b` | Cohere Transcribe 2B | ✅ mlx-audio | ✅ transformers | ⏳ CrispASR GGUF | 14 (no hu) | **CC-BY-NC-4.0** (non-commercial) |
+| `cohere-transcribe-2b` | Cohere Transcribe 2B | ✅ mlx-audio | ✅ transformers | ✅ CrispASR GGUF | 14 (no hu) | **CC-BY-NC-4.0** (non-commercial) |
 
-✅ = available now · ⏳ = planned (remaining Linux CPU phase). The picker only offers
-combinations implemented on your host. On Linux+GPU the heavy runtimes
-(`transformers`/`torch`, `nemo_toolkit`) are pulled **on demand** via `uv run --with`
-when you first launch that backend — they never touch the project lockfile. Mind
-VRAM: 0.6–2B models and small Omnilingual sizes fit ~8 GB; the 7B will not. License notes:
+✅ = available now · ⏳ = not built (Omnilingual has no MLX build yet; its Linux-CPU
+CTC path is unimplemented). The picker only offers combinations implemented on your
+host. On Linux+GPU the heavy runtimes (`transformers`/`torch`, `nemo_toolkit`) are
+pulled **on demand** via `uv run --with` when you first launch that backend — they
+never touch the project lockfile. The Linux-CPU Cohere path uses **CrispASR** (a
+whisper.cpp-style ggml runtime); install its prebuilt binary once with
+`./scripts/install_crispasr.sh`, then the ~2.5 GB GGUF downloads on first launch.
+Mind VRAM: 0.6–2B models and small Omnilingual sizes fit ~8 GB; the 7B will not. License notes:
 
 - **Whisper** — MIT, fully permissive (commercial OK).
 - **Meta Omnilingual ASR** — Apache-2.0; broadest language coverage, the best
