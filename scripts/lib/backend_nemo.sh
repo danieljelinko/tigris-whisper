@@ -4,7 +4,13 @@
 # Serves NVIDIA Nemotron 3.5 ASR, selected by WHISPER_NEMO_MODEL. The heavy
 # nemo_toolkit[asr] dep is pulled on demand with `uv run --with`, so it never
 # touches the project lockfile. Idempotent: reuse a running server.
+#
+# Nemotron 3.5 needs NeMo "26.06" — its prompt-conditioned RNNT model class
+# (EncDecRNNTBPEModelWithPrompt) is not in any stable PyPI release, so we install
+# from the NeMo main branch as the model card instructs. Override with
+# WHISPER_NEMO_PKG to pin a tag/commit once one ships.
 
+WHISPER_NEMO_PKG="${WHISPER_NEMO_PKG:-nemo_toolkit[asr] @ git+https://github.com/NVIDIA/NeMo.git@main}"
 WHISPER_NEMO_PORT="${WHISPER_NEMO_PORT:-4444}"
 _NM_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 _NM_LOG_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/tigris-whisper"
@@ -28,7 +34,7 @@ ensure_nemo_backend() {
     echo "Starting NeMo ASR server (model: $wanted_model)…"
     echo "  First run resolves nemo_toolkit[asr] and downloads the model — can take several minutes."
     WHISPER_NEMO_MODEL="$wanted_model" WHISPER_NEMO_PORT="$WHISPER_NEMO_PORT" \
-        uv run --with "nemo_toolkit[asr]" \
+        uv run --with "$WHISPER_NEMO_PKG" \
         python -u "$_NM_SCRIPT_DIR/src/nemo_asr_server.py" \
         >"$_NM_LOG_DIR/nemo_asr_server.log" 2>&1 &
     NEMO_SERVER_PID=$!

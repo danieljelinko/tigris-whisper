@@ -16,31 +16,69 @@ Env:
     WHISPER_NEMO_PORT    bind port (default 4444)
     WHISPER_LANG         language hint passed by the daemon (best-effort)
 """
-import os, tempfile, pathlib
+import os, re, json, tempfile, pathlib
 from typing import Any
 from flask import Flask, request, jsonify
 
 os.environ.setdefault("HF_HUB_DISABLE_XET", "1")
 MODEL = os.getenv("WHISPER_NEMO_MODEL", "nvidia/nemotron-3.5-asr-streaming-0.6b")
+# Nemotron 3.5 is a prompt-conditioned model: it needs a language key per utterance
+# (e.g. en, fr, hu). Default is configurable; the daemon's per-request language wins.
+DEFAULT_LANG = os.getenv("WHISPER_NEMO_LANG", "en")
+
+_LANG_TAG = re.compile(r"\s*<[a-zA-Z]{2}(?:-[a-zA-Z]{2,})?>\s*$")  # trailing "<en-US>" tag the model emits
 
 _model = None
 
 
 def get_model():
-    "Load and cache the NeMo ASR model. Imports NeMo lazily (heavy/GPU-bound)."
+    "Load the NeMo ASR model and disable the CUDA-graph decoder. Imports NeMo lazily."
     global _model
     if _model is None:
         from nemo.collections.asr.models import ASRModel    # noqa: PLC0415 — deferred: heavy/GPU
-        _model = ASRModel.from_pretrained(model_name=MODEL)
+        m = ASRModel.from_pretrained(model_name=MODEL)
+        try:                                                # CUDA-graph RNNT decoder OOMs / replays None on some GPUs
+            from omegaconf import open_dict
+            dec = m.cfg.decoding
+            with open_dict(dec):
+                if dec.get("greedy") is None: dec.greedy = {}
+                dec.greedy.use_cuda_graph_decoder = False
+            m.change_decoding_strategy(dec)
+        except Exception:                                   # non-RNNT models won't have this knob — ignore
+            pass
+        _model = m
     return _model
+
+
+def _write_manifest(path: str, language: str) -> str:
+    "Write a one-line NeMo manifest carrying the language (prompt models read `lang`)."
+    import soundfile as sf                                  # noqa: PLC0415 — only needed for real inference
+    info = sf.info(path)
+    entry = {"audio_filepath": os.path.abspath(path),
+             "duration": info.frames / info.samplerate, "text": "", "lang": language}
+    fd, mpath = tempfile.mkstemp(suffix=".json")
+    with os.fdopen(fd, "w") as f: f.write(json.dumps(entry) + "\n")
+    return mpath
 
 
 def transcribe_audio(path: str, language: str | None = None) -> str:
     "Transcribe the WAV at `path` with the configured NeMo model."
-    out = get_model().transcribe([path])
-    hyp = out[0] if isinstance(out, (list, tuple)) else out  # NeMo returns a list of hypotheses/strings
-    text = getattr(hyp, "text", hyp)                         # Hypothesis object or plain str
-    return str(text).strip()
+    lang = language or DEFAULT_LANG
+    model = get_model()
+    manifest = _write_manifest(path, lang)
+    try:
+        cfg = model.get_transcribe_config()                 # RNNTPromptTranscribeConfig for Nemotron
+        if hasattr(cfg, "manifest_filepath"): cfg.manifest_filepath = manifest
+        if hasattr(cfg, "target_lang"):       cfg.target_lang = lang
+        if hasattr(cfg, "batch_size"):        cfg.batch_size = 1
+        out = model.transcribe(audio=[path], override_config=cfg)
+    except (TypeError, AttributeError):
+        out = model.transcribe([path])                      # plain NeMo models: no prompt/override config
+    finally:
+        os.unlink(manifest)
+    hyp = out[0] if isinstance(out, (list, tuple)) else out  # list of hypotheses/strings
+    text = str(getattr(hyp, "text", hyp))                   # Hypothesis object or plain str
+    return _LANG_TAG.sub("", text).strip()                  # drop the trailing "<en-US>" tag
 
 
 def create_app() -> Flask:
