@@ -22,6 +22,7 @@ BACKEND_SCRIPTS = {
     "transformers_cuda": REPO / "scripts/lib/backend_transformers.sh",
     "nemo_cuda":       REPO / "scripts/lib/backend_nemo.sh",
     "crispasr":        REPO / "scripts/lib/backend_crispasr.sh",
+    "omnilingual":     REPO / "scripts/lib/backend_omnilingual.sh",
 }
 
 ENSURE_FN = {
@@ -34,6 +35,7 @@ ENSURE_FN = {
     "transformers_cuda": "ensure_transformers_backend",
     "nemo_cuda":        "ensure_nemo_backend",
     "crispasr":         "ensure_crispasr_backend",
+    "omnilingual":      "ensure_omnilingual_backend",
 }
 
 PORT_VARS = {
@@ -46,6 +48,7 @@ PORT_VARS = {
     "transformers_cuda": "WHISPER_TRANSFORMERS_PORT",
     "nemo_cuda":       "WHISPER_NEMO_PORT",
     "crispasr":        "WHISPER_CRISPASR_PORT",
+    "omnilingual":     "WHISPER_OMNILINGUAL_PORT",
 }
 
 MODEL_VARS = {
@@ -57,6 +60,7 @@ MODEL_VARS = {
     "transformers_cuda": "WHISPER_TRANSFORMERS_MODEL",
     "nemo_cuda":       "WHISPER_NEMO_MODEL",
     "crispasr":        "WHISPER_CRISPASR_MODEL",
+    "omnilingual":     "WHISPER_OMNILINGUAL_MODEL",
     "docker_cuda":     None,
 }
 

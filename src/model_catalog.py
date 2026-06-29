@@ -33,6 +33,7 @@ BACKEND_ENV_VARS: dict[str, str] = {       # which env var each backend reads it
     "transformers_cpu": "WHISPER_TRANSFORMERS_MODEL",
     "nemo_cuda":        "WHISPER_NEMO_MODEL",
     "crispasr":         "WHISPER_CRISPASR_MODEL",
+    "omnilingual":      "WHISPER_OMNILINGUAL_MODEL",
 }
 
 
@@ -94,30 +95,31 @@ MODELS: dict[str, ModelInfo] = {
          "linux_cpu":  None}),
 
     # ── Meta Omnilingual ASR (Nov 2025, Apache-2.0) ──────────────────────────
-    # LLM family = best accuracy; CTC-300M = the CPU-viable option.
-    # `darwin` is None: no MLX-converted Omnilingual repo exists on the Hub yet
-    # (the mlx-community/omniASR-* ids 404; only facebook/* PyTorch repos exist),
-    # so mlx-audio has nothing to load. Restore a `_p("mlx_audio", "<id>")` here
-    # once an MLX build is published. Verified 2026-06-25.
+    # Served by the dedicated `omnilingual` backend (Meta's fairseq2-based
+    # omnilingual-asr package) — NOT transformers: omniASR has no `model_type` in
+    # config.json, so `transformers.pipeline` can't load it. Model ids are the
+    # library's model_card strings (omniASR_{LLM,CTC}_<size>[_v2]), not HF repos.
+    # `darwin` is None: no MLX build exists. VRAM (approx): 300M ~5 GB, 1B ~6 GB,
+    # 3B ~10 GB, 7B ~17 GB — only 300M/1B fit an 8 GB GPU.
     "omnilingual-llm-300m": ModelInfo(
-        "Meta Omnilingual ASR LLM 300M", "Apache-2.0", "1600+ langs (incl. hu, fr)",
+        "Meta Omnilingual ASR LLM 300M (~5 GB VRAM)", "Apache-2.0", "1600+ langs (incl. hu, fr)",
         {"darwin":     None,
-         "linux_cuda": _p("transformers_cuda", "facebook/omniASR-LLM-300M"),
-         "linux_cpu":  _p("transformers_cpu", "facebook/omniASR-CTC-300M")}),
+         "linux_cuda": _p("omnilingual", "omniASR_LLM_300M_v2"),
+         "linux_cpu":  _p("omnilingual", "omniASR_CTC_300M")}),   # CTC is lighter for CPU
     "omnilingual-llm-1b": ModelInfo(
-        "Meta Omnilingual ASR LLM 1B", "Apache-2.0", "1600+ langs (incl. hu, fr)",
+        "Meta Omnilingual ASR LLM 1B (~6 GB VRAM)", "Apache-2.0", "1600+ langs (incl. hu, fr)",
         {"darwin":     None,
-         "linux_cuda": _p("transformers_cuda", "facebook/omniASR-LLM-1B"),
+         "linux_cuda": _p("omnilingual", "omniASR_LLM_1B_v2"),
          "linux_cpu":  None}),
     "omnilingual-llm-3b": ModelInfo(
-        "Meta Omnilingual ASR LLM 3B", "Apache-2.0", "1600+ langs (incl. hu, fr)",
+        "Meta Omnilingual ASR LLM 3B (~10 GB VRAM)", "Apache-2.0", "1600+ langs (incl. hu, fr)",
         {"darwin":     None,
-         "linux_cuda": _p("transformers_cuda", "facebook/omniASR-LLM-3B"),
+         "linux_cuda": _p("omnilingual", "omniASR_LLM_3B_v2"),
          "linux_cpu":  None}),
     "omnilingual-llm-7b": ModelInfo(
-        "Meta Omnilingual ASR LLM 7B", "Apache-2.0", "1600+ langs (incl. hu, fr)",
+        "Meta Omnilingual ASR LLM 7B (~17 GB VRAM)", "Apache-2.0", "1600+ langs (incl. hu, fr)",
         {"darwin":     None,
-         "linux_cuda": _p("transformers_cuda", "facebook/omniASR-LLM-7B"),
+         "linux_cuda": _p("omnilingual", "omniASR_LLM_7B_v2"),
          "linux_cpu":  None}),
 
     # ── Cohere Transcribe (Mar 2026) ─────────────────────────────────────────

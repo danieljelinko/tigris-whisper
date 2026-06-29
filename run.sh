@@ -127,6 +127,11 @@ crispasr)
     source "$SCRIPT_DIR/scripts/lib/backend_crispasr.sh"
     ensure_crispasr_backend
     ;;
+omnilingual)
+    # shellcheck source=scripts/lib/backend_omnilingual.sh
+    source "$SCRIPT_DIR/scripts/lib/backend_omnilingual.sh"
+    ensure_omnilingual_backend
+    ;;
 *)
     echo "Error: unknown backend '$BACKEND'"; exit 1 ;;
 esac

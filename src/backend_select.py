@@ -8,9 +8,11 @@ import sys
 from typing import Literal
 
 Backend = Literal["docker_cuda", "faster_whisper", "whispercpp_cpu", "whispercpp_metal", "mlx",
-                  "mlx_audio", "transformers_cuda", "transformers_cpu", "nemo_cuda", "crispasr"]
+                  "mlx_audio", "transformers_cuda", "transformers_cpu", "nemo_cuda", "crispasr",
+                  "omnilingual"]
 BACKENDS: set[str] = {"docker_cuda", "faster_whisper", "whispercpp_cpu", "whispercpp_metal", "mlx",
-                      "mlx_audio", "transformers_cuda", "transformers_cpu", "nemo_cuda", "crispasr"}
+                      "mlx_audio", "transformers_cuda", "transformers_cpu", "nemo_cuda", "crispasr",
+                      "omnilingual"}
 
 
 class UnsupportedPlatformError(RuntimeError):
