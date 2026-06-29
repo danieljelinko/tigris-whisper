@@ -62,8 +62,25 @@ bin_src="$(find "$tmp" -type f -name crispasr 2>/dev/null | head -1 || true)"
 [ -n "$bin_src" ] || { echo "Error: could not find a 'crispasr' executable in the download."; exit 1; }
 
 install -m 0755 "$bin_src" "$BIN_DIR/crispasr"
+# Bundle any shared libs shipped in the tarball into a drop-in lib dir the backend
+# adds to LD_LIBRARY_PATH (future-proof: some release variants ship their libs).
+LIB_DIR="$CRISPASR_DIR/lib"; mkdir -p "$LIB_DIR"
+find "$tmp" -name '*.so*' -exec cp -n {} "$LIB_DIR/" \; 2>/dev/null || true
 rm -rf "$tmp"
 
 echo "✓ CrispASR installed: $BIN_DIR/crispasr"
-echo "  The Cohere GGUF (~2.5 GB) downloads on first server start to $CRISPASR_DIR."
+
+# The prebuilt binary dynamically links libopenblas (+ libgfortran). Check now so
+# the failure is obvious here, not as a silent server exit later.
+if ! LD_LIBRARY_PATH="$LIB_DIR:${LD_LIBRARY_PATH:-}" ldd "$BIN_DIR/crispasr" 2>/dev/null | grep -q "not found"; then
+    echo "  Runtime libraries: OK"
+else
+    echo ""
+    echo "  ⚠ Missing runtime libraries (the binary needs OpenBLAS):"
+    LD_LIBRARY_PATH="$LIB_DIR:${LD_LIBRARY_PATH:-}" ldd "$BIN_DIR/crispasr" 2>/dev/null | grep "not found" | sed 's/^/      /'
+    echo "  Fix (Debian/Ubuntu):  sudo apt install -y libopenblas0 libgfortran5"
+    echo "  No sudo? Drop matching libopenblas.so.0 / libgfortran.so.5 into: $LIB_DIR"
+fi
+
+echo "  The Cohere GGUF (~1.5 GB) downloads on first server start to $CRISPASR_DIR."
 echo "  Use it: ./scripts/change_model.sh cohere-transcribe-2b  (then ./run.sh)"

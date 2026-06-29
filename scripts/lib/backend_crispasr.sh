@@ -13,9 +13,16 @@ _crispasr_default_bin="$CRISPASR_DIR/bin/crispasr"
 command -v crispasr >/dev/null 2>&1 && _crispasr_default_bin="$(command -v crispasr)"
 CRISPASR_BIN="${CRISPASR_BIN:-$_crispasr_default_bin}"
 CRISPASR_PID=""
+# The prebuilt binary links libopenblas/libgfortran. Prefer system libs, but also
+# search a local drop-in dir ($CRISPASR_DIR/lib) so no-sudo users can place them
+# there. install_crispasr.sh populates this when it can.
+export LD_LIBRARY_PATH="${CRISPASR_DIR}/lib:${LD_LIBRARY_PATH:-}"
 
 ensure_crispasr_backend() {
-    if curl -sf "http://localhost:${CRISPASR_PORT}" >/dev/null 2>&1; then
+    # CrispASR's health endpoint is /health (GET / returns 404); it serves the
+    # OpenAI route at /v1/audio/transcriptions, so the daemon needs no change.
+    local health="http://localhost:${CRISPASR_PORT}/health"
+    if curl -sf "$health" >/dev/null 2>&1; then
         echo "✓ CrispASR server already responding on :${CRISPASR_PORT}"; return 0
     fi
 
@@ -42,7 +49,7 @@ ensure_crispasr_backend() {
 
     echo "Waiting for CrispASR API to be ready…"
     local tries=0
-    until curl -sf "http://localhost:${CRISPASR_PORT}" >/dev/null 2>&1; do
+    until curl -sf "$health" >/dev/null 2>&1; do
         if ! kill -0 "$CRISPASR_PID" 2>/dev/null; then
             echo "Error: CrispASR server exited; see $CRISPASR_DIR/server.log"; return 1
         fi

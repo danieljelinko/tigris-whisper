@@ -12,7 +12,14 @@ fail() { echo "  FAIL: $1"; FAIL=$((FAIL+1)); }
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 FAKE_DIR="$(mktemp -d)"
-trap 'rm -rf "$FAKE_DIR"' EXIT
+# Isolate from a developer's local tigris-whisper.env (run.sh sources it, and a
+# WHISPER_BACKEND there would shadow the detection cases). Move it aside for the
+# test and restore it on exit.
+CONFIG_FILE="$SCRIPT_DIR/tigris-whisper.env"
+_CONFIG_BAK=""
+if [ -f "$CONFIG_FILE" ]; then _CONFIG_BAK="$FAKE_DIR/tigris-whisper.env.bak"; mv "$CONFIG_FILE" "$_CONFIG_BAK"; fi
+restore_config() { [ -n "$_CONFIG_BAK" ] && [ -f "$_CONFIG_BAK" ] && mv "$_CONFIG_BAK" "$CONFIG_FILE" || true; }
+trap 'restore_config; rm -rf "$FAKE_DIR"' EXIT
 
 fake_nvidia() {                     # put a working fake nvidia-smi on PATH
     printf '#!/usr/bin/env bash\necho "GPU 0: Fake GPU"\n' > "$FAKE_DIR/nvidia-smi"

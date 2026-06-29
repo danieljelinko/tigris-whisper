@@ -15,9 +15,19 @@ BIN     = pathlib.Path(os.getenv("CRISPASR_BIN",
 BACKEND = os.getenv("CRISPASR_BACKEND", "cohere")
 MODEL   = os.getenv("WHISPER_CRISPASR_MODEL", "auto")
 
+
+def _binary_runs() -> bool:
+    "True only if crispasr is installed AND actually executes (libopenblas present)."
+    if not BIN.exists(): return False
+    try:
+        return subprocess.run([str(BIN), "--version"], capture_output=True).returncode == 0
+    except OSError:
+        return False
+
+
 pytestmark = pytest.mark.skipif(
-    not BIN.exists(),
-    reason=f"crispasr binary not installed (run install_crispasr.sh); BIN={BIN}")
+    not _binary_runs(),
+    reason=f"crispasr not installed/functional (run install_crispasr.sh; needs libopenblas); BIN={BIN}")
 
 
 def _free_port() -> int:
