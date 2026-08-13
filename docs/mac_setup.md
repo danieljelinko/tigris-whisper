@@ -191,6 +191,18 @@ go to whatever app is focused. It is a **separate** permission from Accessibilit
 This lets the daemon **post** the ⌘V paste into the active app. Without it the
 transcript is still copied to the clipboard; you just paste it manually.
 
+### Automation (System Events)
+> System Settings → Privacy & Security → **Automation**
+> Find **tigris-whisper**, expand it, enable **System Events**
+
+The daemon uses AppleScript (`osascript`) to ask System Events which app is
+frontmost and to send it the ⌘V paste. Unlike the other three permissions,
+this one is normally granted through a one-time system dialog — *"tigris-whisper"
+wants to control "System Events"* — the first time the daemon calls
+`osascript`, not through a setting you toggle in advance. If that dialog never
+appears and paste keeps failing with an `osascript ... (-1743)` error in the
+log, see "Text is copied but not pasted" below.
+
 When you first run the daemon, macOS may pop up permission dialogs — click
 **Allow**/**Open System Settings**. If they don't pop up and the hotkey doesn't
 work, check these settings manually. The daemon logs which permission is missing
@@ -326,6 +338,21 @@ line appears in the log, Input Monitoring is missing.
   checking the permission.
 - Check `~/whisper_hotkey_mac.log`; paste failures now include the underlying
   `osascript` error from macOS.
+- If the log shows `Not authorised to send Apple events to System Events.
+  (-1743)` and no permission dialog ever appeared (and the app never shows up
+  under Privacy & Security → Automation to grant manually either), the app
+  bundle's code signature is stale: macOS can't compute a "designated
+  requirement" for it, so it silently refuses the Apple Events request instead
+  of prompting. Confirm with `codesign -dv ~/Applications/tigris-whisper.app` —
+  a healthy bundle shows `Info.plist entries=<N>`; `Info.plist=not bound` means
+  it's stale. Rebuild and re-sign, then reset the cached denial and relaunch:
+  ```bash
+  ./scripts/create_mac_app.sh   # rebuilds and re-signs (fixed in this version)
+  tccutil reset AppleEvents com.danieljelinko.tigris-whisper
+  open ~/Applications/tigris-whisper.app
+  ```
+  Recording once more should now trigger the *"tigris-whisper" wants to
+  control "System Events"* dialog.
 
 ### Recording starts but no text appears
 - Check Microphone permission (step 4).

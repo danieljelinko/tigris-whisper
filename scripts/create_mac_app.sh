@@ -60,6 +60,8 @@ cat > "$CONTENTS/Info.plist" <<PLIST
   <string>13.0</string>
   <key>NSMicrophoneUsageDescription</key>
   <string>tigris-whisper records audio while you hold the hotkey so it can transcribe your speech locally.</string>
+  <key>NSAppleEventsUsageDescription</key>
+  <string>tigris-whisper controls System Events to detect the frontmost app and paste (⌘V) your transcribed text into it.</string>
 </dict>
 </plist>
 PLIST
@@ -140,6 +142,13 @@ exit "$STATUS"
 LAUNCHER
 
 chmod +x "$RESOURCES/$HELPER"
+
+# osacompile signs the bundle before Info.plist above is written, so that
+# signature's seal is stale (Info.plist=not bound) by the time we're done —
+# TCC then can't compute a designated requirement for the app and silently
+# refuses Apple Events/Automation prompts instead of showing them. Re-sign
+# now that every file is in its final place.
+codesign --force --deep --sign - "$APP_DIR"
 
 echo "✓ Created $APP_DIR"
 echo "  Logs: $HOME/Library/Logs/tigris-whisper/daemon.log"
