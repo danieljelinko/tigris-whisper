@@ -9,6 +9,13 @@ platforms = ["osx-arm64"]
 python = "3.12.*"
 pip = "*"
 ffmpeg = "*"
+# av (PyAV) is pulled in transitively by mlx-audio. The PyPI wheel for av 17.x is
+# tagged macosx_14_0_arm64, but pixi solves osx-arm64 against the conda-forge
+# default floor (macOS 11), so uv rejects the wheel and falls back to building av
+# from source, which needs pkg-config + a compiler and breaks the no-Xcode/no-brew
+# macOS path. Pulling av from conda-forge instead gives a prebuilt binary (built
+# against the ffmpeg above) that satisfies mlx-audio's requirement with no build.
+av = "*"
 
 [pypi-dependencies]
 pynput = "*"
