@@ -175,13 +175,26 @@ run `./run.sh` manually, grant permissions to your terminal app instead.
 > System Settings → Privacy & Security → **Microphone**
 > Enable **tigris-whisper** after launching the app
 
-### Accessibility (hotkey + paste)
+### Input Monitoring (the hotkey)
+> System Settings → Privacy & Security → **Input Monitoring**
+> Enable **tigris-whisper** (or your terminal app if running `./run.sh`)
+
+This is what lets the daemon **receive** the Ctrl+Option+Space hotkey. Without
+it the daemon still starts, but the hotkey is silently dead and your keystrokes
+go to whatever app is focused. It is a **separate** permission from Accessibility
+(a common macOS gotcha — Accessibility being on does not cover this).
+
+### Accessibility (the automatic paste)
 > System Settings → Privacy & Security → **Accessibility**
 > Enable **tigris-whisper** (or your terminal app if running `./run.sh`)
 
-When you first run the daemon, macOS may pop up a permission dialog — click
-**Allow**. If it doesn't pop up and the hotkey doesn't work, check these
-settings manually.
+This lets the daemon **post** the ⌘V paste into the active app. Without it the
+transcript is still copied to the clipboard; you just paste it manually.
+
+When you first run the daemon, macOS may pop up permission dialogs — click
+**Allow**/**Open System Settings**. If they don't pop up and the hotkey doesn't
+work, check these settings manually. The daemon logs which permission is missing
+on startup (`Input Monitoring preflight OK` / `Accessibility preflight OK`).
 
 ---
 
@@ -281,13 +294,20 @@ default because those folders may be shared with other local ML projects.
 ## Troubleshooting
 
 ### Hotkey doesn't respond
-- Check Accessibility permission (step 4).
-- If the log says `This process is not trusted`, macOS has not granted
-  Accessibility permission to the launcher process.
-- If you launched with `./run.sh`, enable your terminal app in Accessibility
-  (Terminal, iTerm, or VS Code), then restart `./run.sh`.
+The hotkey needs **Input Monitoring**, not Accessibility. If keystrokes leak into
+the focused app (e.g. `^@` shows up in your terminal) and no `Recording started`
+line appears in the log, Input Monitoring is missing.
+- Check the startup log: it prints `Input Monitoring preflight OK` when granted,
+  or a warning naming the missing permission when not.
+- Grant **Input Monitoring** (step 3): System Settings → Privacy & Security →
+  **Input Monitoring**.
+- If you launched with `./run.sh`, enable your terminal app (Terminal, iTerm, or
+  VS Code), then fully quit and restart `./run.sh` — macOS only applies the new
+  permission to newly launched processes.
 - If you launched with `open ~/Applications/tigris-whisper.app`, enable
   **tigris-whisper**, then restart the app.
+- Accessibility is a different permission that only affects the automatic paste
+  (see "Text is copied but not pasted" below).
 
 ### Text is copied but not pasted
 - If you launched with `open ~/Applications/tigris-whisper.app`, grant
