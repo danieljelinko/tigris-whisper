@@ -9,7 +9,7 @@ daemon itself.
 
 ## What you'll end up with
 
-Hold **Ctrl + Option + Space** → speak → release Ctrl → transcribed text is
+Hold **Ctrl + Option + Cmd** → speak → release Ctrl → transcribed text is
 pasted into whatever app is in front of you. The transcription runs entirely
 locally on your Mac using **mlx-whisper** (Apple's MLX framework, GPU-accelerated
 on Apple Silicon). No network call, no API key, no data leaving your machine.
@@ -179,7 +179,7 @@ run `./run.sh` manually, grant permissions to your terminal app instead.
 > System Settings → Privacy & Security → **Input Monitoring**
 > Enable **tigris-whisper** (or your terminal app if running `./run.sh`)
 
-This is what lets the daemon **receive** the Ctrl+Option+Space hotkey. Without
+This is what lets the daemon **receive** the Ctrl+Option+Cmd hotkey. Without
 it the daemon still starts, but the hotkey is silently dead and your keystrokes
 go to whatever app is focused. It is a **separate** permission from Accessibility
 (a common macOS gotcha — Accessibility being on does not cover this).
@@ -242,7 +242,7 @@ WHISPER_LANG=fr ./run.sh   # French
 WHISPER_LANG=hu ./run.sh   # Hungarian
 ```
 
-Hold **Ctrl + Option + Space** to start recording.  
+Hold **Ctrl + Option + Cmd** to start recording.  
 Release **Ctrl** to stop and transcribe.  
 The text is pasted automatically into the active window.
 
@@ -308,6 +308,14 @@ line appears in the log, Input Monitoring is missing.
   **tigris-whisper**, then restart the app.
 - Accessibility is a different permission that only affects the automatic paste
   (see "Text is copied but not pasted" below).
+- If Input Monitoring preflight reports OK but `Recording started` still never
+  appears in the log, something on the machine can silently swallow real
+  Space key presses combined with any modifier before they reach any app's
+  event tap (observed on a Mac with Microsoft Defender's endpoint security
+  extension active; tried Ctrl+Option+Space, Ctrl+Shift+Space, and even
+  Option+Space alone — all failed identically, while standalone modifier
+  key-down/key-up events always worked). This is why the hotkey is a
+  modifier-only chord, Ctrl+Option+Cmd, instead of anything involving Space.
 
 ### Text is copied but not pasted
 - If you launched with `open ~/Applications/tigris-whisper.app`, grant
@@ -387,7 +395,7 @@ code, read:
    end-to-end check starts `src/mlx_whisper_server.py` and
    transcribes a real WAV. If it's green, the backend works.
 2. **Polish `src/whisper_hotkey_mac_experimental.py`** — the hotkey + recording
-   + paste logic. Test the golden path manually: hold Ctrl+Option+Space in a
+   + paste logic. Test the golden path manually: hold Ctrl+Option+Cmd in a
    text editor, speak, release Ctrl, confirm text is pasted.
 3. **Tune the model / RAM** — on 8 GB, try `WHISPER_MLX_MODEL=...q4` variants and
    measure latency + peak RSS. Record the chosen default in `03_decisions.md`.

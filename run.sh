@@ -141,7 +141,7 @@ esac
 echo ""
 echo "Backend ready. Starting tigris-whisper Daemon…"
 if [ "$OS" = "Darwin" ]; then
-    echo "Hold Ctrl+Option+Space to record; release Ctrl to transcribe and paste."
+    echo "Hold Ctrl+Option+Cmd to record; release Ctrl to transcribe and paste."
     echo "If the hotkey does not respond, enable Input Monitoring for your terminal app"
     echo "(System Settings → Privacy & Security → Input Monitoring). Accessibility is a"
     echo "separate permission that only enables the automatic paste."

@@ -115,7 +115,7 @@ trap cleanup EXIT TERM INT
 
 export PATH="$HOME/.pixi/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
-notify "Starting in the background. Hold Ctrl+Option+Space to record."
+notify "Starting in the background. Hold Ctrl+Option+Cmd to record."
 STATUS=0
 {
     echo "===== $(date) starting tigris-whisper ====="

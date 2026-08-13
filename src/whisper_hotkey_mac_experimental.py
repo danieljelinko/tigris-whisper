@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # whisper_hotkey_mac.py
 """
-Hold Ctrl + Option + Space to start dictation, release *either* Ctrl key to stop.
+Hold Ctrl + Option + Cmd to start dictation, release *either* Ctrl key to stop.
 The captured audio is sent to a Whisper server and the transcription is copied
 to the clipboard and pasted (⌘-V) into the front-most application.
 
@@ -23,10 +23,18 @@ LOG_FILE     = pathlib.Path.home() / "whisper_hotkey_mac.log"
 TMP_WAV      = pathlib.Path(tempfile.gettempdir()) / "whisper_tmp.wav"
 CTRL_KEYS    = {Key.ctrl_l, Key.ctrl_r}
 ALT_KEYS     = {Key.alt_l, Key.alt_r}
+CMD_KEYS     = {Key.cmd_l, Key.cmd_r}
+# Modifier-only chord (Ctrl+Option+Cmd), not modifier+Space: on this hardware,
+# real hardware key presses combined with any modifier(s) plus Space never
+# reach pynput's event tap (tried Ctrl+Option+Space, Ctrl+Shift+Space, and
+# Option+Space alone — all silently dropped), while standalone modifier
+# key-down/key-up events are always delivered reliably. Using three modifiers
+# with no regular key avoids whatever is eating Space entirely.
 
 # ── Logging ───────────────────────────────────────────────────────────────
+HOTKEY_DEBUG = os.getenv("WHISPER_HOTKEY_DEBUG") == "1"
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG if HOTKEY_DEBUG else logging.INFO,
     format="%(asctime)s %(levelname)s: %(message)s",
     handlers=[logging.FileHandler(LOG_FILE), logging.StreamHandler()]
 )
@@ -170,7 +178,7 @@ def preflight_input_monitoring():
     # Denied: surface the system dialog and tell the user exactly what to enable.
     request_input_monitoring()
     msg = (
-        "Input Monitoring permission missing — the Ctrl+Option+Space hotkey will NOT fire "
+        "Input Monitoring permission missing — the Ctrl+Option+Cmd hotkey will NOT fire "
         "(your keystrokes go to the active app instead). This is SEPARATE from Accessibility. "
         "If running ./run.sh, enable your terminal app in System Settings → Privacy & Security → "
         "Input Monitoring. If launching the app, enable tigris-whisper. Restart after granting it."
@@ -230,19 +238,23 @@ def stop_recording():
 # ── Hot-key logic ─────────────────────────────────────────────────────────
 def on_press(key):
     pressed.add(key)
+    if HOTKEY_DEBUG:
+        log.debug("key down: %r  pressed=%r", key, pressed)
     if (stream is None
-        and Key.space in pressed
         and pressed & CTRL_KEYS
-        and pressed & ALT_KEYS):
+        and pressed & ALT_KEYS
+        and pressed & CMD_KEYS):
         start_recording()
 
 def on_release(key):
+    if HOTKEY_DEBUG:
+        log.debug("key up: %r  pressed=%r", key, pressed)
     if key in CTRL_KEYS and stream is not None:
         stop_recording()
     pressed.discard(key)
 
 log.info("Whisper hot-key daemon (macOS) ready. "
-         "Hold Ctrl+Option+Space to record; release Ctrl to stop.  API=%s", API)
+         "Hold Ctrl+Option+Cmd to record; release Ctrl to stop.  API=%s", API)
 preflight_microphone()
 preflight_input_monitoring()   # required to RECEIVE the hotkey
 preflight_accessibility()      # required to POST the ⌘V paste

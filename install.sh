@@ -100,7 +100,7 @@ if [ "$OS" = "Darwin" ]; then
     echo "IMPORTANT — for normal use, launch the app and grant permissions to it:"
     echo "  1. Microphone:       System Settings → Privacy & Security → Microphone → enable tigris-whisper"
     echo "  2. Input Monitoring: System Settings → Privacy & Security → Input Monitoring → enable tigris-whisper"
-    echo "     (REQUIRED for the Ctrl+Option+Space hotkey to fire — separate from Accessibility.)"
+    echo "     (REQUIRED for the Ctrl+Option+Cmd hotkey to fire — separate from Accessibility.)"
     echo "  3. Accessibility:    System Settings → Privacy & Security → Accessibility → enable tigris-whisper"
     echo "     (Enables the automatic ⌘V paste.)"
     echo "     (If you run ./run.sh manually instead, grant these to your terminal app.)"

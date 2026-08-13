@@ -304,7 +304,7 @@ if [ "$OS" = "Darwin" ]; then
     echo "   Privacy & Security → Accessibility → enable tigris-whisper"
     echo ""
     echo "7. Use it:"
-    echo "   Hold  Ctrl + Option + Space  to record"
+    echo "   Hold  Ctrl + Option + Cmd  to record"
     echo "   Release Ctrl to transcribe and paste into the active app"
     echo ""
     echo "Notes:"

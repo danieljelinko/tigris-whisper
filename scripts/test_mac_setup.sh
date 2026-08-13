@@ -231,5 +231,5 @@ if [ "$FAIL" -gt 0 ]; then
 else
     echo "Ready. Normal launch: open ~/Applications/tigris-whisper.app"
     echo "Manual/dev launch from this repo: ./run.sh"
-    echo "Hold Ctrl+Option+Space to record; release Ctrl to transcribe and paste."
+    echo "Hold Ctrl+Option+Cmd to record; release Ctrl to transcribe and paste."
 fi
