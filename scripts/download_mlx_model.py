@@ -78,11 +78,21 @@ def warm_mlx_audio(model: str) -> int:
     print(f"Preparing mlx-audio model: {model}", flush=True)
     print("If the model is not cached, Hugging Face download progress appears below.", flush=True)
     try:
-        from mlx_audio.stt import load                      # deferred: Apple-Silicon only
+        from mlx_audio.stt.utils import load_model           # deferred: Apple-Silicon only
     except Exception as exc:
         print(f"Could not import mlx_audio (Apple Silicon only): {exc}", file=sys.stderr)
         return 1
-    load(model)
+    # Some HF repos (e.g. Cohere Transcribe MLX builds) nest weights under a quant
+    # subfolder instead of the repo root; mlx-audio's loader only looks at the root.
+    model_path = model
+    if not os.path.exists(model_path):
+        from huggingface_hub import snapshot_download
+        local_dir = snapshot_download(model)
+        if not os.path.exists(os.path.join(local_dir, "config.json")):
+            subdirs = [d for d in os.listdir(local_dir) if os.path.exists(os.path.join(local_dir, d, "config.json"))]
+            local_dir = os.path.join(local_dir, subdirs[0]) if len(subdirs) == 1 else local_dir
+        model_path = local_dir
+    load_model(model_path)
     print("mlx-audio model ready (loaded by the same call the server uses).", flush=True)
     return 0
 

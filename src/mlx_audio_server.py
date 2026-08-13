@@ -27,12 +27,24 @@ MODEL = os.getenv("WHISPER_MLX_AUDIO_MODEL", "mlx-community/nemotron-3.5-asr-str
 _model = None
 
 
+def _resolve_model_path(model: str) -> str:
+    "Some HF repos (e.g. Cohere Transcribe MLX builds) nest weights under a quant subfolder instead of the repo root; mlx-audio's loader only looks at the root."
+    if os.path.exists(model):
+        return model
+    from huggingface_hub import snapshot_download          # noqa: PLC0415 — deferred: Apple-Silicon only
+    local_dir = snapshot_download(model)
+    if os.path.exists(os.path.join(local_dir, "config.json")):
+        return local_dir
+    subdirs = [d for d in os.listdir(local_dir) if os.path.exists(os.path.join(local_dir, d, "config.json"))]
+    return os.path.join(local_dir, subdirs[0]) if len(subdirs) == 1 else local_dir
+
+
 def get_model():
     "Load and cache the mlx-audio STT model. Imports mlx-audio lazily (Mac-only)."
     global _model
     if _model is None:
-        from mlx_audio.stt import load                      # noqa: PLC0415 — deferred: Apple-Silicon only
-        _model = load(MODEL)
+        from mlx_audio.stt.utils import load_model           # noqa: PLC0415 — deferred: Apple-Silicon only
+        _model = load_model(_resolve_model_path(MODEL))
     return _model
 
 
