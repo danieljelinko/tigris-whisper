@@ -113,12 +113,71 @@ def preflight_accessibility():
         return
 
     msg = (
-        "Accessibility permission missing. Global hotkey monitoring and automatic paste will not work. "
+        "Accessibility permission missing. Automatic paste (⌘V) will not work. "
         "If running ./run.sh, enable your terminal app in System Settings → Privacy & Security → "
         "Accessibility. If launching the app, enable tigris-whisper. Restart after granting permission."
     )
     log.warning(msg)
     notify("Accessibility permission needed", "Enable your terminal app or tigris-whisper, then restart.")
+
+# ── Input Monitoring (macOS 10.15+) ───────────────────────────────────────
+# The global hotkey listener is a Quartz event tap; on macOS 10.15+ it only
+# RECEIVES key events when this process's host app is granted *Input Monitoring*
+# (TCC service kTCCServiceListenEvent). This is a DIFFERENT permission from
+# Accessibility: Accessibility governs posting the ⌘V paste, Input Monitoring
+# governs receiving the hotkey. Without it the hotkey is silently dead and the
+# keystrokes fall through to the foreground app, so check it explicitly — the
+# old code only checked Accessibility and reported "OK" while the hotkey did
+# nothing.
+_HID_REQUEST_LISTEN_EVENT = 1                 # kIOHIDRequestTypeListenEvent
+_HID_ACCESS = {0: True, 1: False, 2: None}    # granted / denied / unknown
+
+def _iokit():
+    return ctypes.cdll.LoadLibrary(
+        "/System/Library/Frameworks/IOKit.framework/IOKit"
+    )
+
+def input_monitoring_trusted() -> bool | None:
+    """Return True (granted), False (denied), or None (unknown/unavailable)."""
+    try:
+        iokit = _iokit()
+        iokit.IOHIDCheckAccess.restype = ctypes.c_int
+        iokit.IOHIDCheckAccess.argtypes = [ctypes.c_uint32]
+        return _HID_ACCESS.get(iokit.IOHIDCheckAccess(_HID_REQUEST_LISTEN_EVENT))
+    except Exception as e:
+        log.debug("Input Monitoring trust check failed: %s", e)
+        return None
+
+def request_input_monitoring() -> None:
+    """Prompt macOS to add this app to the Input Monitoring list (shows the dialog)."""
+    try:
+        iokit = _iokit()
+        iokit.IOHIDRequestAccess.restype = ctypes.c_bool
+        iokit.IOHIDRequestAccess.argtypes = [ctypes.c_uint32]
+        iokit.IOHIDRequestAccess(_HID_REQUEST_LISTEN_EVENT)
+    except Exception as e:
+        log.debug("Input Monitoring request failed: %s", e)
+
+def preflight_input_monitoring():
+    trusted = input_monitoring_trusted()
+    if trusted is True:
+        log.info("Input Monitoring preflight OK")
+        return
+    if trusted is None:
+        log.warning("Could not verify Input Monitoring permission before starting hotkey listener.")
+        return
+
+    # Denied: surface the system dialog and tell the user exactly what to enable.
+    request_input_monitoring()
+    msg = (
+        "Input Monitoring permission missing — the Ctrl+Option+Space hotkey will NOT fire "
+        "(your keystrokes go to the active app instead). This is SEPARATE from Accessibility. "
+        "If running ./run.sh, enable your terminal app in System Settings → Privacy & Security → "
+        "Input Monitoring. If launching the app, enable tigris-whisper. Restart after granting it."
+    )
+    log.warning(msg)
+    notify("Input Monitoring permission needed",
+           "Enable your terminal app or tigris-whisper under Input Monitoring, then restart.")
 
 def start_recording():
     global stream, target_app
@@ -185,7 +244,8 @@ def on_release(key):
 log.info("Whisper hot-key daemon (macOS) ready. "
          "Hold Ctrl+Option+Space to record; release Ctrl to stop.  API=%s", API)
 preflight_microphone()
-preflight_accessibility()
+preflight_input_monitoring()   # required to RECEIVE the hotkey
+preflight_accessibility()      # required to POST the ⌘V paste
 
 try:
     with Listener(on_press=on_press, on_release=on_release) as listener:
