@@ -1,0 +1,23 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../guess-class/guess-class-ingest"
+		},
+		{
+			"path": "../audio-ingest"
+		},
+		{
+			"path": "../../zolip"
+		},
+		{
+			"path": "../../it-takes-a-village"
+		},
+		{
+			"path": "../../guestguru"
+		}
+	],
+	"settings": {}
+}

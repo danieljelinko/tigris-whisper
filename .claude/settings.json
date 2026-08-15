@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git commit -m ' *)",
+      "Bash(./run.sh --print-backend)",
+      "Bash(arecord -l)",
+      "Bash(pactl list *)",
+      "Bash(curl -sf http://localhost:4444/)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(nvidia-smi -L)"
+    ]
+  }
+}
