@@ -11,7 +11,7 @@ its HTTP contract is testable) on any platform with the boundary mocked.
 
 Run (Linux):  uv run --with omnilingual-asr python src/omnilingual_asr_server.py
 Env:
-    WHISPER_OMNILINGUAL_MODEL   model_card (default omniASR_LLM_300M_v2; ~5 GB VRAM)
+    WHISPER_OMNILINGUAL_MODEL   model_card (default omniASR_LLM_300M; ~5 GB VRAM)
     WHISPER_OMNILINGUAL_LANG    default language as an Omnilingual code (eng_Latn)
     WHISPER_OMNILINGUAL_HOST    bind host (default 127.0.0.1)
     WHISPER_OMNILINGUAL_PORT    bind port (default 4444)
@@ -21,7 +21,7 @@ from typing import Any
 from flask import Flask, request, jsonify
 
 os.environ.setdefault("HF_HUB_DISABLE_XET", "1")
-MODEL = os.getenv("WHISPER_OMNILINGUAL_MODEL", "omniASR_LLM_300M_v2")
+MODEL = os.getenv("WHISPER_OMNILINGUAL_MODEL", "omniASR_LLM_300M")
 DEFAULT_LANG = os.getenv("WHISPER_OMNILINGUAL_LANG", "eng_Latn")
 
 # ISO 639-1 → Omnilingual {lang}_{script} codes (the families our daemon sends).

@@ -11,7 +11,7 @@ _OL_LOG_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/tigris-whisper"
 OMNILINGUAL_SERVER_PID=""
 
 ensure_omnilingual_backend() {
-    local wanted_model="${WHISPER_OMNILINGUAL_MODEL:-omniASR_LLM_300M_v2}"
+    local wanted_model="${WHISPER_OMNILINGUAL_MODEL:-omniASR_LLM_300M}"
     if curl -sf "http://localhost:${WHISPER_OMNILINGUAL_PORT}" >/dev/null 2>&1; then
         local running_model
         running_model="$(curl -sf "http://localhost:${WHISPER_OMNILINGUAL_PORT}" \

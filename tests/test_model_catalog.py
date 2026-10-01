@@ -81,8 +81,24 @@ def test_resolve_omnilingual_on_linux_gpu_uses_dedicated_backend_not_transformer
 
     # Then it routes to the dedicated `omnilingual` backend with a library model_card id
     assert placement.backend == "omnilingual"
-    assert placement.model == "omniASR_LLM_300M_v2"
+    assert placement.model == "omniASR_LLM_300M"   # GPU-verified card, shared with audio-ingest
     assert placement.env_var == "WHISPER_OMNILINGUAL_MODEL"
+
+
+def test_resolve_omnilingual_ctc_1b_is_cpu_viable_when_no_gpu():
+    # Given the non-autoregressive CTC 1B (cannot loop) on a Linux host without a GPU
+    placement = resolve("omnilingual-ctc-1b", "Linux", has_nvidia_gpu=False)
+
+    # Then it routes to the omnilingual backend with the v2 CTC card
+    assert placement.backend == "omnilingual" and placement.model == "omniASR_CTC_1B_v2"
+
+
+def test_resolve_omnilingual_unlimited_uses_long_audio_card_on_linux_gpu():
+    # Given the 'Unlimited' LLM variant (trained for longer audio) on a Linux GPU host
+    placement = resolve("omnilingual-llm-unlimited-1b-v2", "Linux", has_nvidia_gpu=True)
+
+    # Then it routes to the omnilingual backend with that card
+    assert placement.backend == "omnilingual" and placement.model == "omniASR_LLM_Unlimited_1B_v2"
 
 
 def test_resolve_omnilingual_on_mac_raises_not_viable_without_mlx_build():
