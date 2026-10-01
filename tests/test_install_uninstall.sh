@@ -64,6 +64,12 @@ chmod +x "$out/Contents/MacOS/applet"
 EOF
 chmod +x "$FAKE_BIN/osacompile"
 
+cat > "$FAKE_BIN/codesign" <<'EOF'
+#!/usr/bin/env bash
+exit 0
+EOF
+chmod +x "$FAKE_BIN/codesign"
+
 export PATH="$FAKE_BIN:$PATH"
 export HOME="$HOME_DIR"
 export WHISPER_APP_PARENT="$APP_PARENT"
